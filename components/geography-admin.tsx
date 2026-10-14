@@ -46,7 +46,7 @@ export function GeographyAdmin(){
     if(showSkeleton)setLoading(true);
     try{
       const [stateRows,campRows,hubRows,pairRows]=await Promise.all([
-        api<StateRow[]>('/locations/states'),api<CampRow[]>('/orientation-camps'),
+        api<StateRow[]>('/locations/states'),api<CampRow[]>('/admin/geography/camps'),
         api<HubRow[]>('/admin/geography/hubs'),api<Pair[]>('/admin/geography/proximities'),
       ]);
       const responses=await Promise.allSettled(stateRows.map((state)=>api<Lga[]>(`/locations/states/${state.id}/lgas`)));
@@ -87,8 +87,8 @@ export function GeographyAdmin(){
   const current=Math.min(page,totalPages),slice=<T,>(items:T[])=>items.slice((current-1)*6,current*6);
 
   return <div className="geo-admin">
-    <aside className="geo-sidebar"><a href="/admin/operations"><Brand/></a><nav aria-label="Admin navigation"><a href="/admin/operations">⌂ <span>Dashboard</span></a><span>♙ <b>Users</b></span><a href="/admin/verifications">◇ <span>Verifications</span></a><span>♧ <b>Matches</b></span><span>▣ <b>Travel Plans</b></span><a className="active" href="/admin/geography" aria-current="page">⌘ <span>Geography</span></a><span>▥ <b>Reports</b></span><a href="/admin/safety">⌾ <span>Safety</span></a><a href="/admin/journey-guides">▤ <span>Content</span></a><span>☷ <b>Audit Logs</b></span><span>⚙ <b>Settings</b></span></nav><a className="geo-back" href="/dashboard">← <span>Back to app</span></a></aside>
-    {navOpen?<div className="geo-mobile-nav" role="dialog" aria-label="Admin navigation"><div><button aria-label="Close admin menu" onClick={()=>setNavOpen(false)}>×</button><Brand/><a href="/admin/operations">Dashboard</a><a href="/admin/verifications">Verifications</a><a href="/admin/geography">Geography</a><a href="/admin/safety">Safety</a><a href="/admin/journey-guides">Content</a></div></div>:null}
+    <aside className="geo-sidebar"><a href="/admin/operations"><Brand/></a><nav aria-label="Admin navigation"><a href="/admin/operations">⌂ <span>Dashboard</span></a><span>♙ <b>Users</b></span><a href="/admin/verifications">◇ <span>Verifications</span></a><span>♧ <b>Matches</b></span><span>▣ <b>Travel Plans</b></span><a className="active" href="/admin/geography" aria-current="page">⌘ <span>Geography</span></a><a href="/admin/orientation-camps">△ <span>Orientation Camps</span></a><span>▥ <b>Reports</b></span><a href="/admin/safety">⌾ <span>Safety</span></a><a href="/admin/journey-guides">▤ <span>Content</span></a><span>☷ <b>Audit Logs</b></span><span>⚙ <b>Settings</b></span></nav><a className="geo-back" href="/dashboard">← <span>Back to app</span></a></aside>
+    {navOpen?<div className="geo-mobile-nav" role="dialog" aria-label="Admin navigation"><div><button aria-label="Close admin menu" onClick={()=>setNavOpen(false)}>×</button><Brand/><a href="/admin/operations">Dashboard</a><a href="/admin/verifications">Verifications</a><a href="/admin/geography">Geography</a><a href="/admin/orientation-camps">Orientation Camps</a><a href="/admin/safety">Safety</a><a href="/admin/journey-guides">Content</a></div></div>:null}
     <main className="geo-main">
       <header className="geo-mobile-head"><Brand/><button type="button" aria-label="Open admin menu" aria-expanded={navOpen} onClick={()=>setNavOpen(true)}>☰</button></header>
       <header className="geo-page-head"><div><h1>Geography administration</h1><p>States and LGAs are imported as canonical records, while camps, hubs, coverage, and reviewed proximity estimates are managed here.</p></div><button className="geo-user" type="button"><span>A</span>Admin⌄</button></header>

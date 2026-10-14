@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.1",
+    "@svg-maps/nigeria": "^2.0.0",
     "@vinext/cloudflare": "^1.0.0",
     "better-auth": "^1.6.0",
     "lucide-react": "^1.47.0",

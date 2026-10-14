@@ -1,6 +1,8 @@
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap");
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
 :root {
   --primary: 15 118 110;
   --primary-dark: 17 94 89;
@@ -14,7 +16,7 @@
   --foreground: 23 36 34;
   --muted: 100 116 139;
   --border: 221 231 229;
-  --font-sans: Arial, sans-serif;
+  --font-sans: "Plus Jakarta Sans", sans-serif;
   color-scheme: light;
 }
 html {
@@ -1064,14 +1066,14 @@ body {
 /* Travel Circle application workspace */
 .circle-app-shell {
   min-height: 100svh;
-  display: grid;
-  grid-template-columns: 240px minmax(0, 1fr);
+  display: block;
   background: #f8faf9;
   color: rgb(var(--foreground));
   animation: circle-page-in 0.25s ease both;
 }
 .circle-app-body {
   min-width: 0;
+  margin-left: 240px;
 }
 .circle-sidebar {
   position: sticky;
@@ -1230,7 +1232,9 @@ body {
 .circle-search {
   display: flex;
   height: 42px;
-  width: min(440px, 46vw);
+  width: min(440px, 100%);
+  min-width: 0;
+  flex: 1 1 320px;
   align-items: center;
   gap: 10px;
   border: 1px solid #e7eeec;
@@ -1336,9 +1340,9 @@ body {
   color: white;
 }
 .circle-content {
-  width: min(1150px, calc(100vw - 5rem));
+  width: min(1150px, 100%);
   margin-inline: auto;
-  padding: 24px 10px 46px 20rem;
+  padding: 24px clamp(22px, 4vw, 54px) 46px;
 }
 .circle-page-header {
   position: relative;
@@ -2355,9 +2359,19 @@ body {
   font-size: 13px;
   line-height: 1.6;
 }
-.circle-empty-state > a {
-  width: max-content;
-  margin: auto;
+.circle-empty-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+.circle-empty-feedback {
+  margin: 16px auto 0 !important;
+  color: #0f766e !important;
+  font-weight: 700;
+}
+.circle-empty-feedback.error {
+  color: #c83b3b !important;
 }
 .circle-empty-state > small {
   display: block;
@@ -2512,9 +2526,9 @@ body {
   animation-delay: 0.34s;
 }
 
-@media (max-width: 1050px) and (min-width: 761px) {
-  .circle-app-shell {
-    display: block;
+@media (max-width: 1023px) and (min-width: 761px) {
+  .circle-app-body {
+    margin-left: 0;
   }
   .circle-brand > span:last-child,
   .circle-sidebar nav a > span,
@@ -2559,9 +2573,11 @@ body {
 
 @media (max-width: 760px) {
   .circle-app-shell {
-    display: block;
     min-height: 100svh;
     background: white;
+  }
+  .circle-app-body {
+    margin-left: 0;
   }
   .circle-sidebar,
   .circle-topbar,

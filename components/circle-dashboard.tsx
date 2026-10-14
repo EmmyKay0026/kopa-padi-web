@@ -966,7 +966,17 @@ function CircleSkeleton() {
   );
 }
 
-function CircleEmptyState() {
+function CircleEmptyState({
+  busy,
+  error,
+  notice,
+  onRerun,
+}: {
+  busy: boolean;
+  error: string;
+  notice: string;
+  onRerun: () => void;
+}) {
   return (
     <div className="circle-app-shell">
       <AppSidebar unreadCount={0} />
@@ -987,9 +997,29 @@ function CircleEmptyState() {
               A travel circle will appear here after you’re matched with
               compatible travelers.
             </p>
-            <Link className="circle-primary-button" href="/matching">
-              Browse Matches <Icon name="arrow" size={16} />
-            </Link>
+            <div className="circle-empty-actions">
+              <button
+                type="button"
+                className="circle-primary-button"
+                disabled={busy}
+                onClick={onRerun}
+              >
+                <Icon name="refresh" size={16} />
+                {busy ? "Rerunning matches…" : "Rerun matches"}
+              </button>
+              <Link className="circle-secondary-button" href="/matching">
+                View matching status <Icon name="arrow" size={16} />
+              </Link>
+            </div>
+            {error ? (
+              <p className="circle-empty-feedback error" role="alert">
+                {error}
+              </p>
+            ) : notice ? (
+              <p className="circle-empty-feedback" role="status" aria-live="polite">
+                {notice}
+              </p>
+            ) : null}
             <small>
               Former members can’t access old Circle messages or meetup details.
             </small>
@@ -1072,6 +1102,9 @@ export function CircleDashboard() {
   const [openMember, setOpenMember] = useState<string | null>(null);
   const [confirmState, setConfirmState] = useState<ConfirmState>(null);
   const [hasNewMessages, setHasNewMessages] = useState(false);
+  const [rematching, setRematching] = useState(false);
+  const [rematchError, setRematchError] = useState("");
+  const [rematchNotice, setRematchNotice] = useState("");
   const lastCursor = useRef<string | null>(null);
   const viewportRef = useRef<HTMLDivElement>(null);
   const nearBottomRef = useRef(true);
@@ -1168,6 +1201,42 @@ export function CircleDashboard() {
       setBusy(false);
     }
   }
+  async function rerunMatches() {
+    setRematching(true);
+    setRematchError("");
+    setRematchNotice("");
+    try {
+      const result = await api<{
+        status: "QUEUED" | "ALREADY_IN_PROGRESS" | "COOLDOWN";
+        retryAfterSeconds: number;
+      }>("/matching/rematch", { method: "POST" });
+      setRematchNotice(
+        result.status === "QUEUED"
+          ? "Matching has been queued. We’re checking for compatible travelers now."
+          : result.status === "ALREADY_IN_PROGRESS"
+            ? "Matching is already in progress for your travel plan."
+            : `Please wait ${result.retryAfterSeconds} seconds before rerunning matches.`,
+      );
+
+      if (result.status !== "COOLDOWN") {
+        for (let attempt = 0; attempt < 15; attempt += 1) {
+          await new Promise((resolve) => window.setTimeout(resolve, 2000));
+          const current = await refreshCircle();
+          if (current) {
+            await loadInitial();
+            setNotice("Your Travel Circle is ready.");
+            break;
+          }
+        }
+      }
+    } catch (reason) {
+      setRematchError(
+        reason instanceof Error ? reason.message : "Could not rerun matching",
+      );
+    } finally {
+      setRematching(false);
+    }
+  }
   async function send(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const text = body.trim();
@@ -1220,7 +1289,15 @@ export function CircleDashboard() {
     if (nearBottomRef.current) setHasNewMessages(false);
   }
   if (data === undefined && !error) return <CircleSkeleton />;
-  if (data === null) return <CircleEmptyState />;
+  if (data === null)
+    return (
+      <CircleEmptyState
+        busy={rematching}
+        error={rematchError}
+        notice={rematchNotice}
+        onRerun={() => void rerunMatches()}
+      />
+    );
   if (!data)
     return (
       <main className="circle-fatal-error" role="alert">

@@ -1,5 +1,6 @@
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
+import { AuthGuard } from "@/components/auth-guard";
 export const metadata = {
   title: "Kopa-Padi - Travel together. Go further.",
   description:
@@ -11,7 +12,7 @@ export default function Layout({
   return (
     <html suppressHydrationWarning lang="en">
       <body>
-        {children}
+        <AuthGuard>{children}</AuthGuard>
         <Toaster richColors position="top-right" />
       </body>
     </html>

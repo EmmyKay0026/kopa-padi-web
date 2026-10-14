@@ -15,6 +15,7 @@ const today = () => {
 };
 
 const schema = z.object({
+  destinationCampId: z.string().uuid('Select a destination camp.'),
   originStateId: z.string().min(1, "Select an origin state."),
   originLgaId: z.string().min(1, "Select an origin LGA."),
   originTownId: z.string().optional(),
@@ -43,6 +44,9 @@ const schema = z.object({
 });
 type Values = z.infer<typeof schema>;
 type Place = { id: string; name: string };
+type CampRow = {
+  camp: { id: string; campName: string; stateName: string; officialAddress: string | null; status: 'ACTIVE' | 'TEMPORARY' };
+};
 type Plan = {
   plan: {
     id: string;
@@ -54,6 +58,7 @@ type Plan = {
     transportFlexible: boolean;
     nearbyMatchingEnabled: boolean;
     groupPreference: "ANY_VERIFIED_PCM";
+    destinationCampId: string;
     originStateId: string;
     originLgaId: string;
     originTownId: string | null;
@@ -61,13 +66,14 @@ type Plan = {
   originState: Place;
   originLga: Place;
   originTown: Place | null;
-  destination: { campName: string; stateName: string };
+  destination: CampRow["camp"];
 };
 type Verification = {
   verification: { status: string };
-  camp?: { campName: string; stateName: string };
+  camp?: { id: string; campName: string; stateName: string };
 };
 const defaults: Values = {
+  destinationCampId: '',
   originStateId: "",
   originLgaId: "",
   originTownId: "",
@@ -79,7 +85,7 @@ const defaults: Values = {
   nearbyMatchingEnabled: true,
   groupPreference: "ANY_VERIFIED_PCM",
 };
-const steps = ["Departure", "Schedule", "Preferences", "Review"];
+const steps = ["Route", "Schedule", "Preferences", "Review"];
 const mobileNav: Array<[AppIconName, string, string]> = [
   ["home", "Dashboard", "/app"],
   ["trip", "My Trips", "/travel-plans"],
@@ -152,7 +158,7 @@ function Header({ step, active }: { step?: number; active?: boolean }) {
         <p className="mt-1 text-xs text-muted">
           {active
             ? "Your active Travel Plan."
-            : "Plan your journey to your verified NYSC camp."}
+            : "Choose your NYSC orientation camp and plan the journey."}
         </p>
       </header>
       {step ? (
@@ -183,32 +189,18 @@ function Header({ step, active }: { step?: number; active?: boolean }) {
     </>
   );
 }
-function Destination({
-  camp,
-}: {
-  camp?: { campName: string; stateName: string };
-}) {
+function Destination({ camp }: { camp?: CampRow["camp"] }) {
   return (
-    <section className="rounded-2xl border border-primary/20 bg-primary-light/25 p-4">
+    <section className="rounded-2xl border border-primary/20 bg-primary-light/25 p-4" aria-live="polite">
       <div className="flex items-start gap-3">
         <AppIcon name="pin" className="mt-0.5 text-primary" />
         <div className="flex-1">
-          <p className="text-[10px] font-bold text-primary">
-            Your destination (verified)
-          </p>
-          <h2 className="mt-1 text-sm font-black">{camp?.campName}</h2>
-          <p className="text-xs text-muted">{camp?.stateName}</p>
-          <p className="mt-3 flex items-center gap-1 text-[10px] font-semibold text-primary-dark">
-            <AppIcon name="check" size={14} /> Verified from your NYSC posting
-          </p>
+          <p className="text-[10px] font-bold text-primary">Selected destination</p>
+          <h2 className="mt-1 text-sm font-black">{camp?.campName ?? "Choose an orientation camp"}</h2>
+          <p className="text-xs text-muted">{camp?.stateName ?? "Your selected camp will appear here."}</p>
+          {camp?.officialAddress ? <p className="mt-2 text-[10px] leading-4 text-muted">{camp.officialAddress}</p> : null}
         </div>
-        <span title="Locked destination" aria-label="Locked destination">
-          <AppIcon name="lock" size={18} />
-        </span>
       </div>
-      <p className="mt-2 border-t border-primary/10 pt-2 text-right text-[9px] text-muted">
-        This destination cannot be changed here.
-      </p>
     </section>
   );
 }
@@ -381,6 +373,7 @@ function CancelDialog({
 
 export function TravelPlanManager() {
   const [states, setStates] = useState<Place[]>([]),
+    [camps, setCamps] = useState<CampRow[]>([]),
     [lgas, setLgas] = useState<Place[]>([]),
     [towns, setTowns] = useState<Place[]>([]);
   const [plan, setPlan] = useState<Plan | null>(null),
@@ -404,7 +397,8 @@ export function TravelPlanManager() {
     resolver: zodResolver(schema),
     defaultValues: defaults,
   });
-  const stateId = useWatch({ control, name: "originStateId" }),
+  const destinationCampId = useWatch({ control, name: "destinationCampId" }),
+    stateId = useWatch({ control, name: "originStateId" }),
     lgaId = useWatch({ control, name: "originLgaId" }),
     flex = useWatch({ control, name: "dateFlexibilityDays" }),
     windowValue = useWatch({ control, name: "departureWindow" }),
@@ -415,11 +409,13 @@ export function TravelPlanManager() {
     setLoading(true);
     setError("");
     try {
-      const [s, v] = await Promise.all([
+      const [s, v, c] = await Promise.all([
         api<Place[]>("/locations/states"),
         api<Verification>("/verification/status"),
+        api<CampRow[]>("/orientation-camps"),
       ]);
       setStates(s);
+      setCamps(c);
       setVerification(v);
       if (v.verification.status !== "VERIFIED") {
         setPlan(null);
@@ -428,6 +424,7 @@ export function TravelPlanManager() {
       const p = await api<Plan | null>("/travel-plans/active");
       setPlan(p);
       if (p) reset({ ...p.plan, originTownId: p.plan.originTownId ?? "" });
+      else reset({ ...defaults, destinationCampId: v.camp?.id ?? "" });
     } catch {
       setError(
         "We couldn't load your Travel Plan right now. Please try again.",
@@ -468,7 +465,7 @@ export function TravelPlanManager() {
   async function next() {
     const fields =
       step === 1
-        ? (["originStateId", "originLgaId"] as const)
+        ? (["destinationCampId", "originStateId", "originLgaId"] as const)
         : step === 2
           ? (["intendedTravelDate"] as const)
           : [];
@@ -527,7 +524,7 @@ export function TravelPlanManager() {
         <VerificationRequired />
       </Shell>
     );
-  const camp = plan?.destination ?? verification.camp;
+  const camp = plan?.destination ?? camps.find(({ camp: item }) => item.id === destinationCampId)?.camp;
   if (plan && !editing)
     return (
       <Shell>
@@ -628,7 +625,6 @@ export function TravelPlanManager() {
     <Shell>
       <Header step={step} />
       <main className="mx-auto max-w-3xl px-5 pb-32">
-        <Destination camp={camp} />
         <form
           onSubmit={handleSubmit(save)}
           className="mt-4 rounded-2xl border border-border bg-surface p-5 shadow-soft"
@@ -636,10 +632,25 @@ export function TravelPlanManager() {
           <div key={step} className="enter">
             {step === 1 ? (
               <>
-                <h2 className="text-lg font-black">Departure location</h2>
+                <h2 className="text-lg font-black">Route</h2>
                 <p className="mb-5 mt-1 text-xs text-muted">
-                  Where will you be travelling from?
+                  Choose your destination camp and departure location.
                 </p>
+                <label className="travel-label">
+                  Destination orientation camp *
+                  <select className="field" {...register("destinationCampId")}>
+                    <option value="">Select orientation camp</option>
+                    {camps.map(({ camp: item }) => (
+                      <option key={item.id} value={item.id}>
+                        {item.stateName} — {item.campName}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.destinationCampId ? <span>{errors.destinationCampId.message}</span> : null}
+                </label>
+                <div className="mb-6"><Destination camp={camp} /></div>
+                <h3 className="text-sm font-black">Departure location</h3>
+                <p className="mb-5 mt-1 text-xs text-muted">Where will you be travelling from?</p>
                 <label className="travel-label">
                   Origin State *
                   <select
