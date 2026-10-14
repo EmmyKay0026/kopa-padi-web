@@ -1,6 +1,7 @@
 "use client";
 import { api } from "@/lib/api";
 import Link from "next/link";
+import { UserMobileMenu } from "./user-navigation";
 import { UserSidebar } from "./user-sidebar";
 import {
   ChangeEvent,
@@ -45,7 +46,7 @@ const nav = [
   ["⚕", "Safety Centre", "/safety"],
   ["⌖", "Travel Plans", "/travel-plans"],
   ["✓", "Verification", "/verification"],
-  ["♙", "Profile", "/verification"],
+  ["♙", "Profile", "/profile"],
 ];
 const steps = ["Profile", "NYSC assignment", "Upload document", "Review"];
 const unique = (values: string[]) => Array.from(new Set(values));
@@ -57,7 +58,7 @@ const size = (bytes: number) =>
 function Shell({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-background">
-      <UserSidebar active="Profile" />
+      <UserSidebar active="Verification" />
       <div className="lg:pl-60">
         <header className="flex h-16 items-center justify-between border-b border-border bg-surface px-5 lg:hidden">
           <Link href="/app" aria-label="Back">
@@ -66,7 +67,7 @@ function Shell({ children }: { children: React.ReactNode }) {
           <Link href="/" className="font-black text-primary">
             ♟ Kopa-Padi
           </Link>
-          <button aria-label="Menu">☷</button>
+          <UserMobileMenu />
         </header>
         {children}
         <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-border bg-white px-2 py-2 lg:hidden">

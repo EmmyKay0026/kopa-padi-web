@@ -1,9 +1,12 @@
 "use client";
 import { AppIcon, type AppIconName } from "./app-icon";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import { departurePlanHref, resolveDepartureState } from "@/lib/departure-context";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { authClient } from "@/lib/auth-client";
+import { UserMobileMenu } from "./user-navigation";
 type State = { id: string; name: string };
 type Lga = { id: string; name: string };
 type Town = { id: string; name: string };
@@ -46,9 +49,8 @@ function Header() {
             {name[0]}
           </span>
           <strong className="hidden text-sm sm:block">{name}</strong>
-          <span aria-hidden="true" className="text-muted">
-            v
-          </span>
+          <Link href="/profile" className="hidden text-sm font-bold text-primary lg:block">Profile</Link>
+          <UserMobileMenu />
         </div>
       </div>
     </header>
@@ -259,6 +261,7 @@ function SidePanel() {
 }
 
 export function LocationSelector() {
+  const search = useSearchParams().toString();
   const [states, setStates] = useState<State[]>([]),
     [lgas, setLgas] = useState<Lga[]>([]),
     [towns, setTowns] = useState<Town[]>([]);
@@ -280,6 +283,7 @@ export function LocationSelector() {
       .then((x) => {
         if (active) {
           setStates(x);
+          setStateId(resolveDepartureState(new URLSearchParams(search), x)?.id ?? "");
           setLoading("");
         }
       })
@@ -292,18 +296,21 @@ export function LocationSelector() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [search]);
   useEffect(() => {
     if (!stateId) {
       setLgas([]);
       setLgaId("");
       setTowns([]);
       setTownId("");
+      setConfirmed(false);
+      setLoading("");
       return;
     }
     let active = true;
     setLoading("lgas");
     setLgaId("");
+    setLgas([]);
     setTowns([]);
     setTownId("");
     setConfirmed(false);
@@ -334,6 +341,7 @@ export function LocationSelector() {
     let active = true;
     setLoading("towns");
     setTownId("");
+    setTowns([]);
     setConfirmed(false);
     setErrors({});
     api<Town[]>("/locations/lgas/" + lgaId + "/towns")
@@ -361,7 +369,7 @@ export function LocationSelector() {
     if (!state) next.state = "Please select a State.";
     if (!lga) next.lga = "Please select an LGA.";
     setErrors(next);
-    if (state && lga) {
+    if (state && lga && (!townId || town)) {
       setConfirmed(true);
       document
         .getElementById("selection-summary")
@@ -529,6 +537,11 @@ export function LocationSelector() {
               {confirmed ? "Location Confirmed" : "Use This Location"}{" "}
               <span className="ml-2">{confirmed ? "OK" : "->"}</span>
             </button>
+            {confirmed && state && lga && (!townId || town) ? <Link
+              href={departurePlanHref({ originStateId: state.id, originLgaId: lga.id, originTownId: town?.id ?? "" })}
+              className="btn-primary mt-3 w-full"
+            >Continue to Travel Plan <span className="ml-2" aria-hidden="true">→</span></Link> : null}
+            {confirmed ? <p className="mt-3 text-center text-xs text-muted">Your departure selection will prefill a new plan. An existing active plan keeps its current details.</p> : null}
           </section>
           <div className="hidden lg:block">
             <SidePanel />

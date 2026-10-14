@@ -27,7 +27,8 @@ export type UserSidebarItem =
   | "Messages"
   | "Journey Safety"
   | "Safety Centre"
-  | "Profile";
+  | "Profile"
+  | "Verification";
 const navigation: Array<{
   label: UserSidebarItem;
   href: string;
@@ -129,10 +130,11 @@ export function UserSidebar({
       <div className="border-t pt-3">
         <Link
           href="/verification"
+          aria-current={active === "Verification" ? "page" : undefined}
           className="flex min-h-11 items-center gap-3 rounded-xl px-4 text-[13px] font-semibold text-slate-600 hover:bg-background hover:text-primary"
         >
           <Settings aria-hidden="true" className="h-5 w-5 shrink-0" strokeWidth={1.8} />
-          Settings
+          Verification
         </Link>
         <button
           type="button"

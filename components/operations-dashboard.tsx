@@ -1,6 +1,7 @@
 "use client";
 import { api } from "@/lib/api";
 import Link from "next/link";
+import { UserMobileMenu } from "./user-navigation";
 import { useCallback, useEffect, useState } from "react";
 
 type Summary = {
@@ -85,7 +86,7 @@ function Shell({ children }: { children: React.ReactNode }) {
           <b className="text-primary">
             ← &nbsp; Kopa-Padi <small className="text-muted">Admin</small>
           </b>
-          <button aria-label="Menu">☷</button>
+          <UserMobileMenu admin />
         </header>
         {children}
         <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-3 border-t border-border bg-white py-2 lg:hidden">
@@ -103,9 +104,9 @@ function Shell({ children }: { children: React.ReactNode }) {
           </Link>
           <Link
             className="grid min-h-11 place-items-center text-[10px] text-muted"
-            href="#"
+            href="/admin/geography"
           >
-            More
+            Geography
           </Link>
         </nav>
       </div>
