@@ -2,7 +2,7 @@ import { bindings, defineConfig, defineWorker } from "cf/config";
 
 export default defineConfig(({ isPreview }) => ({
   worker: defineWorker({
-    name: "kopa-padi-web",
+    name: "web",
     entrypoint: "vinext/server/fetch-handler",
 
     compatibilityDate: "2026-10-01",
