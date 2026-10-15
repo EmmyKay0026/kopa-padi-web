@@ -2,11 +2,14 @@
 import { api } from "@/lib/api";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import { resolveDepartureContext } from "@/lib/departure-context";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
 import { AppIcon, type AppIconName } from "./app-icon";
 import { UserSidebar } from "./user-sidebar";
+import { UserMobileMenu } from "./user-navigation";
 
 const today = () => {
   const date = new Date();
@@ -91,7 +94,7 @@ const mobileNav: Array<[AppIconName, string, string]> = [
   ["trip", "My Trips", "/travel-plans"],
   ["match", "Matches", "/matching"],
   ["people", "Travel Circle", "/circle"],
-  ["profile", "Profile", "/verification"],
+  ["profile", "Profile", "/profile"],
 ];
 const windows: Array<[Values["departureWindow"], string, string]> = [
   ["EARLY_MORNING", "Early Morning", "4 AM – 7 AM"],
@@ -129,9 +132,7 @@ function Shell({ children }: { children: React.ReactNode }) {
             <AppIcon name="arrow" className="rotate-180" />
           </Link>
           <b>Travel Plan</b>
-          <button aria-label="Menu">
-            <AppIcon name="menu" />
-          </button>
+          <UserMobileMenu />
         </header>
         {children}
         <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-border bg-white px-2 py-2 lg:hidden">
@@ -198,7 +199,10 @@ function Destination({ camp }: { camp?: CampRow["camp"] }) {
           <p className="text-[10px] font-bold text-primary">Selected destination</p>
           <h2 className="mt-1 text-sm font-black">{camp?.campName ?? "Choose an orientation camp"}</h2>
           <p className="text-xs text-muted">{camp?.stateName ?? "Your selected camp will appear here."}</p>
-          {camp?.officialAddress ? <p className="mt-2 text-[10px] leading-4 text-muted">{camp.officialAddress}</p> : null}
+          {camp ? <>
+            <p className="mt-2 text-[10px] leading-4 text-muted">{camp.officialAddress?.trim() || "Official address is not available for this camp."}</p>
+            {camp.status === "ACTIVE" || camp.status === "TEMPORARY" ? <span className="mt-2 inline-block rounded-full bg-white px-2 py-1 text-[10px] font-bold text-primary">{camp.status}</span> : null}
+          </> : null}
         </div>
       </div>
     </section>
@@ -372,6 +376,7 @@ function CancelDialog({
 }
 
 export function TravelPlanManager() {
+  const search = useSearchParams().toString();
   const [states, setStates] = useState<Place[]>([]),
     [camps, setCamps] = useState<CampRow[]>([]),
     [lgas, setLgas] = useState<Place[]>([]),
@@ -381,6 +386,7 @@ export function TravelPlanManager() {
     [step, setStep] = useState(1),
     [editing, setEditing] = useState(false),
     [loading, setLoading] = useState(true),
+    [loadFailed, setLoadFailed] = useState(false),
     [error, setError] = useState(""),
     [cancelOpen, setCancelOpen] = useState(false),
     [cancelling, setCancelling] = useState(false);
@@ -405,8 +411,11 @@ export function TravelPlanManager() {
     transport = useWatch({ control, name: "transportMode" }),
     transportFlexible = useWatch({ control, name: "transportFlexible" }),
     nearby = useWatch({ control, name: "nearbyMatchingEnabled" });
+  const loadRequest = useRef(0);
   const load = useCallback(async () => {
+    const request = ++loadRequest.current;
     setLoading(true);
+    setLoadFailed(false);
     setError("");
     try {
       const [s, v, c] = await Promise.all([
@@ -414,6 +423,7 @@ export function TravelPlanManager() {
         api<Verification>("/verification/status"),
         api<CampRow[]>("/orientation-camps"),
       ]);
+      if (request !== loadRequest.current) return;
       setStates(s);
       setCamps(c);
       setVerification(v);
@@ -422,17 +432,32 @@ export function TravelPlanManager() {
         return;
       }
       const p = await api<Plan | null>("/travel-plans/active");
+      if (request !== loadRequest.current) return;
       setPlan(p);
       if (p) reset({ ...p.plan, originTownId: p.plan.originTownId ?? "" });
-      else reset({ ...defaults, destinationCampId: v.camp?.id ?? "" });
+      else {
+        let initialLgas: Place[] = [], initialTowns: Place[] = [];
+        const departure = await resolveDepartureContext(
+          new URLSearchParams(search), s,
+          async (id) => (initialLgas = await api<Place[]>(`/locations/states/${encodeURIComponent(id)}/lgas`)),
+          async (id) => (initialTowns = await api<Place[]>(`/locations/lgas/${encodeURIComponent(id)}/towns`)),
+        );
+        if (request !== loadRequest.current) return;
+        // Native selects must have the validated options before RHF registers them.
+        setLgas(initialLgas);
+        setTowns(initialTowns);
+        reset({ ...defaults, ...departure, destinationCampId: c.some(({ camp }) => camp.id === v.camp?.id) ? v.camp!.id : "" });
+      }
     } catch {
+      if (request !== loadRequest.current) return;
+      setLoadFailed(true);
       setError(
         "We couldn't load your Travel Plan right now. Please try again.",
       );
     } finally {
-      setLoading(false);
+      if (request === loadRequest.current) setLoading(false);
     }
-  }, [reset]);
+  }, [reset, search]);
   useEffect(() => {
     void load();
   }, [load]);
@@ -462,7 +487,17 @@ export function TravelPlanManager() {
       live = false;
     };
   }, [lgaId]);
+  function validRoute(values: Values) {
+    const valid = states.some((option) => option.id === values.originStateId)
+      && lgas.some((option) => option.id === values.originLgaId)
+      && (!values.originTownId || towns.some((option) => option.id === values.originTownId))
+      && camps.some(({ camp }) => camp.id === values.destinationCampId);
+    if (!valid) setError("Choose an available destination camp, State and LGA, and an optional town from the listed options.");
+    else setError("");
+    return valid;
+  }
   async function next() {
+    if (step === 1 && !validRoute(getValues())) return;
     const fields =
       step === 1
         ? (["destinationCampId", "originStateId", "originLgaId"] as const)
@@ -472,12 +507,23 @@ export function TravelPlanManager() {
     if (fields.length && !(await trigger(fields))) return;
     setStep((v) => Math.min(4, v + 1));
   }
-  function edit() {
-    setEditing(true);
-    setStep(1);
+  async function edit() {
+    if (!plan) return;
+    try {
+      const [originLgas, originTowns] = await Promise.all([
+        api<Place[]>(`/locations/states/${encodeURIComponent(plan.plan.originStateId)}/lgas`),
+        api<Place[]>(`/locations/lgas/${encodeURIComponent(plan.plan.originLgaId)}/towns`),
+      ]);
+      setLgas(originLgas);
+      setTowns(originTowns);
+      reset({ ...plan.plan, originTownId: plan.plan.originTownId ?? "" });
+      setEditing(true);
+      setStep(1);
+    } catch { setError("We couldn't load your departure options. Please try again."); }
   }
   async function save(values: Values) {
     setError("");
+    if (!validRoute(values)) { setStep(1); return; }
     try {
       const payload = { ...values, originTownId: values.originTownId || null };
       const result = await api<Plan>(
@@ -518,13 +564,14 @@ export function TravelPlanManager() {
         <Loading />
       </Shell>
     );
+  if (loadFailed) return <Shell><main className="mx-auto max-w-3xl p-5"><p role="alert">{error}</p><button type="button" className="btn-primary mt-4" onClick={() => void load()}>Try again</button></main></Shell>;
   if (verification?.verification.status !== "VERIFIED")
     return (
       <Shell>
         <VerificationRequired />
       </Shell>
     );
-  const camp = plan?.destination ?? camps.find(({ camp: item }) => item.id === destinationCampId)?.camp;
+  const camp = plan && !editing ? plan.destination : camps.find(({ camp: item }) => item.id === destinationCampId)?.camp;
   if (plan && !editing)
     return (
       <Shell>
@@ -546,6 +593,7 @@ export function TravelPlanManager() {
               <i className="flex-1 border-t border-dashed border-primary" />
               <span>{plan.destination.campName}</span>
             </div>
+            <div className="mb-5"><Destination camp={plan.destination} /></div>
             <dl className="grid gap-4 text-xs sm:grid-cols-2">
               {[
                 ["Travel date", dateLabel(plan.plan.intendedTravelDate)],
@@ -660,6 +708,8 @@ export function TravelPlanManager() {
                         setValue("originStateId", e.target.value);
                         setValue("originLgaId", "");
                         setValue("originTownId", "");
+                        setLgas([]);
+                        setTowns([]);
                       },
                     })}
                   >
@@ -683,6 +733,7 @@ export function TravelPlanManager() {
                       onChange: (e) => {
                         setValue("originLgaId", e.target.value);
                         setValue("originTownId", "");
+                        setTowns([]);
                       },
                     })}
                   >
@@ -853,6 +904,7 @@ export function TravelPlanManager() {
                   <i className="flex-1 border-t border-dashed border-primary" />
                   <span>{camp?.campName}</span>
                 </div>
+                <div className="mb-5"><Destination camp={camp} /></div>
                 <dl className="grid gap-3 text-xs">
                   {[
                     ["Travel date", dateLabel(values.intendedTravelDate)],
@@ -925,7 +977,7 @@ export function TravelPlanManager() {
                 href="/app"
                 className="grid min-h-12 flex-1 place-items-center rounded-xl border text-xs font-bold"
               >
-                Save and exit
+                Exit without saving
               </Link>
             )}
             {step < 4 ? (

@@ -5,6 +5,7 @@ import { authClient } from "@/lib/auth-client";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { UserSidebar } from "./user-sidebar";
+import { UserMobileMenu, UserNavigationSearch } from "./user-navigation";
 
 type Verification = { verification: { status: string } };
 type Plan = {
@@ -98,22 +99,14 @@ function Top({ name, verified }: { name: string; verified: boolean }) {
   return (
     <>
       <header className="hidden h-20 items-center justify-between border-b bg-white px-8 lg:flex">
-        <label className="relative w-full max-w-md">
-          <span className="sr-only">Search dashboard</span>
-          <Icon name="search" className="absolute left-4 top-3.5 text-muted" />
-          <input
-            className="field pl-12"
-            placeholder="Search trips, matches or messages..."
-          />
-        </label>
+        <UserNavigationSearch />
         <div className="flex items-center gap-4">
-          <button
-            aria-label="Notifications"
+          <Link href="/circle#circle-chat"
+            aria-label="Circle messages"
             className="relative grid h-11 w-11 place-items-center"
           >
             <Icon name="bell" />
-            <i className="absolute right-2 top-2 h-2 w-2 rounded-full bg-danger" />
-          </button>
+          </Link>
           <span className="grid h-11 w-11 place-items-center rounded-full bg-primary-dark font-bold text-white">
             {name[0]}
           </span>
@@ -130,12 +123,13 @@ function Top({ name, verified }: { name: string; verified: boolean }) {
       <header className="flex h-20 items-center justify-between border-b bg-white px-5 lg:hidden">
         <Logo />
         <div className="flex items-center">
-          <button
-            aria-label="Notifications"
+          <UserMobileMenu />
+          <Link href="/circle#circle-chat"
+            aria-label="Circle messages"
             className="grid h-11 w-11 place-items-center"
           >
             <Icon name="bell" />
-          </button>
+          </Link>
           <span className="grid h-10 w-10 place-items-center rounded-full bg-primary-dark font-bold text-white">
             {name[0]}
           </span>
@@ -446,16 +440,16 @@ function CircleCard({
 }
 const quick: Array<[IconName, string, string, string]> = [
   ["plus", "Create a Trip", "Plan a new journey", "/travel-plans"],
-  ["people", "Find Matches", "See travelers going your way", "/matching"],
+  ["people", "Matching Status", "Check your private matching progress", "/matching"],
   ["trip", "My Trips", "View and manage your trips", "/travel-plans"],
   ["chat", "Messages", "Chat with your matches", "/circle"],
 ];
 const safe: Array<[IconName, string, string, string]> = [
-  ["share", "Share Trip", "Share your journey", "/circle"],
-  ["phone", "Emergency Contacts", "Manage your contacts", "/circle"],
-  ["check", "Journey Check-in", "Check in during travel", "/circle"],
-  ["alert", "Report a Concern", "Report unsafe behaviour", "/circle"],
-  ["alert", "SOS", "Use only in emergency", "/circle"],
+  ["share", "Share Trip", "Share your journey", "/journey"],
+  ["phone", "Trusted Contacts", "Manage your contacts", "/journey"],
+  ["check", "Journey Check-in", "Check in during travel", "/journey#check-ins"],
+  ["alert", "Report a Concern", "Report unsafe behaviour", "/safety"],
+  ["alert", "Emergency Tools", "Open journey safety tools", "/journey#emergency"],
 ];
 function Actions({ safety = false }: { safety?: boolean }) {
   const a = safety ? safe : quick;
@@ -465,7 +459,7 @@ function Actions({ safety = false }: { safety?: boolean }) {
       action={
         <Link
           className="text-xs font-bold text-primary"
-          href={safety ? "/circle" : "/travel-plans"}
+          href={safety ? "/journey" : "/travel-plans"}
         >
           See all -&gt;
         </Link>
@@ -505,15 +499,15 @@ function Actions({ safety = false }: { safety?: boolean }) {
 }
 const rec = [
   [
-    "Plan a weekend trip",
-    "Find travelers for popular routes",
+    "Plan your camp journey",
+    "Set your route and travel preferences",
     "/travel-plans",
     "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=600&q=80",
   ],
   [
     "Travel safety tips",
     "Stay informed and travel with confidence",
-    "/circle",
+    "/safety",
     "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=600&q=80",
   ],
   [
@@ -798,10 +792,9 @@ export function TravelerDashboard() {
                 <footer className="flex flex-col items-center justify-between gap-5 py-4 text-sm text-muted sm:flex-row">
                   <Logo />
                   <div className="flex gap-6">
-                    <a href="#">Help</a>
-                    <a href="#">Privacy</a>
-                    <a href="#">Terms</a>
-                    <a href="#">Contact</a>
+                    <Link href="/#faq-list">FAQs</Link>
+                    <Link href="/profile">Profile</Link>
+                    <Link href="/safety">Safety Centre</Link>
                   </div>
                 </footer>
               </>

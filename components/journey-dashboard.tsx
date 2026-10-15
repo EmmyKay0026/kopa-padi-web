@@ -1,6 +1,7 @@
 "use client";
 import { AppIcon, type AppIconName } from "./app-icon";
 import Link from "next/link";
+import { UserMobileMenu, UserNavigationSearch } from "./user-navigation";
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { authClient } from "@/lib/auth-client";
@@ -74,21 +75,14 @@ function ShellTop() {
   return (
     <>
       <header className="hidden h-20 items-center justify-between border-b bg-white px-8 lg:flex">
-        <label className="relative w-full max-w-md">
-          <span className="sr-only">Search</span>
-          <Icon name="search" className="absolute left-4 top-3.5 text-muted" />
-          <input
-            className="field pl-12"
-            placeholder="Search trips, matches or messages..."
-          />
-        </label>
+        <UserNavigationSearch />
         <div className="flex items-center gap-4">
-          <button
-            aria-label="Notifications"
+          <Link href="/circle#circle-chat"
+            aria-label="Circle messages"
             className="grid h-11 w-11 place-items-center"
           >
             <Icon name="bell" />
-          </button>
+          </Link>
           <span className="grid h-11 w-11 place-items-center rounded-full bg-primary-dark font-bold text-white">
             {name[0]}
           </span>
@@ -107,12 +101,7 @@ function ShellTop() {
           &lt;
         </Link>
         <strong>Journey Safety</strong>
-        <button
-          aria-label="More options"
-          className="grid h-11 w-11 place-items-center"
-        >
-          <Icon name="menu" />
-        </button>
+        <UserMobileMenu />
       </header>
     </>
   );
@@ -123,7 +112,7 @@ function Bottom() {
     ["trip", "Trips", "/travel-plans"],
     ["people", "Circle", "/circle"],
     ["shield", "Journey", "/journey"],
-    ["user", "Profile", "/verification"],
+    ["user", "Profile", "/profile"],
   ];
   return (
     <nav

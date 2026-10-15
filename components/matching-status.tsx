@@ -2,6 +2,7 @@
 import { AppIcon, type AppIconName } from "./app-icon";
 
 import Link from "next/link";
+import { UserMobileMenu } from "./user-navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "@/lib/api";
 import { authClient } from "@/lib/auth-client";
@@ -126,6 +127,7 @@ function Header({ name }: { name: string }) {
   return (
     <header className="matching-topbar">
       <Logo />
+      <UserMobileMenu />
       <span className="matching-profile" aria-label={name + "'s profile"}>
         {initials(name)}
       </span>

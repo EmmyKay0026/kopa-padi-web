@@ -2,6 +2,7 @@
 import { AppIcon, type AppIconName } from "./app-icon";
 
 import Link from "next/link";
+import { UserMobileMenu } from "./user-navigation";
 import {
   FormEvent,
   useCallback,
@@ -99,7 +100,7 @@ const nav: [IconName, string, string][] = [
   ["message", "Messages", "/circle#circle-chat"],
   ["journey", "Journey Safety", "/journey"],
   ["shield", "Safety Centre", "/safety"],
-  ["profile", "Profile", "/verification"],
+  ["profile", "Profile", "/profile"],
 ];
 function Brand() {
   return (
@@ -129,20 +130,15 @@ function Shell({
       <div className="lg:pl-60">
         <header className="sticky top-0 z-20 flex h-[68px] items-center justify-between border-b bg-white/95 px-4 backdrop-blur lg:hidden">
           <Brand />
-          <button
-            className="grid h-11 w-11 place-items-center rounded-xl"
-            aria-label="Open navigation"
-          >
-            <Icon name="menu" />
-          </button>
+          <UserMobileMenu />
         </header>
         <header className="hidden h-[72px] items-center justify-end gap-4 border-b bg-white px-8 lg:flex">
-          <button
-            aria-label="Notifications"
+          <Link href="/circle#circle-chat"
+            aria-label="Circle messages"
             className="grid h-10 w-10 place-items-center rounded-full text-slate-600"
           >
             <Icon name="bell" />
-          </button>
+          </Link>
           <span className="grid h-9 w-9 place-items-center rounded-full bg-slate-200 text-[10px] font-black text-slate-700">
             {initials(name)}
           </span>

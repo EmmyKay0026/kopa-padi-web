@@ -2,6 +2,7 @@
 
 import { api } from "@/lib/api";
 import Link from "next/link";
+import { UserMobileMenu } from "./user-navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 type Metrics = {
@@ -100,7 +101,7 @@ function Shell({ children }: { children: React.ReactNode }) {
           <b className="text-primary">
             ← &nbsp; Kopa-Padi <small className="text-muted">Admin</small>
           </b>
-          <button aria-label="Open menu">☷</button>
+          <UserMobileMenu admin />
         </header>
         {children}
         <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-3 border-t border-border bg-white py-2 lg:hidden">
@@ -118,9 +119,9 @@ function Shell({ children }: { children: React.ReactNode }) {
           </Link>
           <Link
             className="grid min-h-11 place-items-center text-[10px] text-muted"
-            href="#"
+            href="/admin/geography"
           >
-            More
+            Geography
           </Link>
         </nav>
       </div>
@@ -295,15 +296,15 @@ export function SafetyAdmin() {
                 onChange={(e) => setSearch(e.target.value)}
               />
             </label>
-            <button
+            <Link href="/admin/operations"
               className="grid h-10 w-10 place-items-center rounded-lg border border-border"
-              aria-label="Notifications"
+              aria-label="Operational status"
             >
               ♧
-            </button>
-            <button className="rounded-lg px-2 text-xs font-bold">
-              A &nbsp; Admin⌄
-            </button>
+            </Link>
+            <Link href="/profile" className="rounded-lg px-2 text-xs font-bold">
+              A &nbsp; Admin profile
+            </Link>
           </div>
         </header>
         {loading ? (

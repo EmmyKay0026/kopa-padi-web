@@ -31,9 +31,9 @@ const nav = [
   ["Home", "#top"],
   ["How It Works", "#how-it-works"],
   ["Safety", "#safety"],
-  ["Blog", "#blog"],
+  ["Travel Tips", "#blog"],
   ["About", "#why"],
-  ["Contact", "#footer"],
+  ["FAQs", "#faq-list"],
 ];
 
 function Logo({ light = false }: { light?: boolean }) {
@@ -62,6 +62,7 @@ function Header() {
   return (
     <header
       className={`fixed inset-x-0 top-0 z-50 border-b transition-all ${scrolled || open ? "border-border bg-white/95 text-foreground shadow-sm backdrop-blur-xl" : "border-transparent bg-transparent text-white"}`}
+      onKeyDown={(event) => { if (event.key === "Escape") setOpen(false); }}
     >
       <nav
         aria-label="Main navigation"
@@ -95,7 +96,7 @@ function Header() {
           onClick={() => setOpen(!open)}
           className="grid h-11 w-11 place-items-center rounded-xl border border-current/20 text-xl lg:hidden"
         >
-          {open ? "x" : "0"}
+          {open ? "×" : "☰"}
         </button>
       </nav>
       {open && (
@@ -133,7 +134,7 @@ function Header() {
 function TripForm({ compact = false }: { compact?: boolean }) {
   return (
     <form
-      action="/register"
+      action="/travel-plans"
       method="get"
       className={compact ? "grid gap-3 md:grid-cols-[1fr_1fr_auto]" : ""}
     >
@@ -141,7 +142,7 @@ function TripForm({ compact = false }: { compact?: boolean }) {
         <>
           <h2 className="text-2xl font-bold">Plan Your Trip</h2>
           <p className="mt-1 text-sm text-muted">
-            Find travelers going your way in seconds.
+            Start planning your journey to an NYSC orientation camp.
           </p>
         </>
       )}
@@ -150,7 +151,6 @@ function TripForm({ compact = false }: { compact?: boolean }) {
           From
           <input
             className="field"
-            name="from"
             placeholder="Departure city"
             required
           />
@@ -160,7 +160,6 @@ function TripForm({ compact = false }: { compact?: boolean }) {
             To
             <input
               className="field"
-              name="to"
               placeholder="Destination"
               required
             />
@@ -172,7 +171,6 @@ function TripForm({ compact = false }: { compact?: boolean }) {
           To
           <input
             className="field"
-            name="to"
             placeholder="Destination"
             required
           />
@@ -183,7 +181,7 @@ function TripForm({ compact = false }: { compact?: boolean }) {
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             <label className="grid gap-2 text-sm font-bold">
               Date
-              <input className="field" type="date" name="date" required />
+              <input className="field" type="date" required />
             </label>
             <label className="grid gap-2 text-sm font-bold">
               Time
@@ -192,7 +190,7 @@ function TripForm({ compact = false }: { compact?: boolean }) {
           </div>
           <label className="mt-4 grid gap-2 text-sm font-bold">
             Transport mode
-            <select className="field" name="mode">
+            <select className="field">
               <option>Car</option>
               <option>Bus</option>
               <option>Train</option>
@@ -209,14 +207,11 @@ function TripForm({ compact = false }: { compact?: boolean }) {
             : "btn-primary group mt-6 w-full"
         }
       >
-        Find a Padi <Arrow />
+        Open Travel Plan <Arrow />
       </button>
-      {!compact && (
-        <p className="mt-3 text-center text-xs text-muted">
-          No account yet? It is free to get started. Your trip details will come
-          with you.
-        </p>
-      )}
+      <p className={compact ? "text-xs text-white/75 md:col-span-3" : "mt-3 text-center text-xs text-muted"}>
+        Sign in and verify your PCM status to create a Travel Plan. This preview does not save your entries; enter your route and schedule in the Travel Plan form.
+      </p>
     </form>
   );
 }
@@ -583,12 +578,12 @@ function Safety() {
             <p className="text-xs font-bold text-muted">TRIP STATUS</p>
             <p className="mt-1 font-black text-primary-dark">? On track</p>
           </div>
-          <button className="mt-6 w-full rounded-xl border p-3 font-bold">
-            Share Trip
-          </button>
-          <button className="mt-3 w-full rounded-xl bg-danger p-3 font-black text-white">
-            SOS - Emergency
-          </button>
+          <Link href="/journey" className="mt-6 block w-full rounded-xl border p-3 text-center font-bold">
+            Open Journey Sharing
+          </Link>
+          <Link href="/journey#emergency" className="mt-3 block w-full rounded-xl bg-danger p-3 text-center font-black text-white">
+            Open Emergency Tools
+          </Link>
         </div>
         <div id="safety-list" className="space-y-5">
           {safety.map(([t, c]) => (
@@ -694,7 +689,7 @@ function Blog() {
     <section id="blog" className="py-24">
       <div className="container-page">
         <div className="max-w-2xl">
-          <p className="eyebrow">From our blog</p>
+          <p className="eyebrow">Travel tips</p>
           <h2 className="section-title">Travel Smarter</h2>
           <p className="mt-4 text-muted">
             Practical advice for safer journeys, better planning and more
@@ -723,10 +718,10 @@ function Blog() {
           ))}
         </div>
         <Link
-          href="/blog"
+          href="/#faq-list"
           className="group mt-8 inline-flex font-bold text-primary"
         >
-          View all articles <Arrow />
+          Read travel FAQs <Arrow />
         </Link>
       </div>
     </section>
@@ -844,15 +839,10 @@ function FinalCTA() {
 
 function Footer() {
   const groups = {
-    Product: ["How It Works", "Find Trips", "Create Trip", "Safety"],
-    Company: ["About", "Blog", "Contact"],
-    Support: ["Help Centre", "FAQs", "Report a Problem"],
-    Legal: [
-      "Terms of Service",
-      "Privacy Policy",
-      "Community Guidelines",
-      "Safety Guidelines",
-    ],
+    Product: [["How It Works", "/#how-it-works"], ["Matching Status", "/matching"], ["Travel Plan", "/travel-plans"], ["Journey Safety", "/journey"]],
+    Discover: [["About Kopa-Padi", "/#why"], ["Travel Tips", "/#blog"], ["Explore Nigeria", "/#explore-nigeria"]],
+    Support: [["FAQs", "/#faq-list"], ["Safety Centre", "/safety"], ["Report a Concern", "/safety"]],
+    Account: [["Profile", "/profile"], ["Verification", "/verification"], ["Log In", "/login"], ["Sign Up", "/register"]],
   };
   return (
     <footer id="footer" className="bg-[#0b211f] py-16 text-white">
@@ -862,19 +852,16 @@ function Footer() {
           <p className="mt-4 text-sm text-white/60">
             Travel together. Go further.
           </p>
-          <p className="mt-6 text-sm text-white/70" aria-label="Social media">
-            Social links
-          </p>
         </div>
         {Object.entries(groups).map(([title, links]) => (
           <div key={title}>
             <h3 className="font-bold">{title}</h3>
             <ul className="mt-4 space-y-3 text-sm text-white/60">
-              {links.map((x) => (
-                <li key={x}>
-                  <a href="#" className="hover:text-white">
-                    {x}
-                  </a>
+              {links.map(([label, href]) => (
+                <li key={label}>
+                  <Link href={href} className="hover:text-white">
+                    {label}
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -882,7 +869,7 @@ function Footer() {
         ))}
       </div>
       <div className="container-page mt-12 border-t border-white/10 pt-6 text-xs text-white/50">
-        ? {new Date().getFullYear()} Kopa-Padi. All rights reserved.
+        © {new Date().getFullYear()} Kopa-Padi. All rights reserved.
       </div>
     </footer>
   );

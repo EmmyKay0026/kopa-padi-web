@@ -3,6 +3,7 @@ import { AppIcon, type AppIconName } from "./app-icon";
 
 import { api } from "@/lib/api";
 import Link from "next/link";
+import { UserMobileMenu, UserNavigationSearch } from "./user-navigation";
 import {
   type FormEvent,
   type ReactNode,
@@ -159,20 +160,13 @@ function AppSidebar({ unreadCount }: { unreadCount: number }) {
 function TopBar({ me }: { me?: Member }) {
   return (
     <header className="circle-topbar">
-      <label className="circle-search">
-        <span className="sr-only">Search trips, matches or messages</span>
-        <Icon name="search" size={18} />
-        <input placeholder="Search trips, matches or messages…" />
-        <kbd>⌘ K</kbd>
-      </label>
-      <button
-        type="button"
+      <UserNavigationSearch />
+      <Link href="/circle#circle-chat"
         className="circle-icon-button"
-        aria-label="Notifications"
+        aria-label="Circle messages"
       >
         <Icon name="bell" />
-        <span className="circle-notification-dot" />
-      </button>
+      </Link>
       <div className="circle-user">
         {me ? (
           <Avatar member={me} />
@@ -197,14 +191,12 @@ function MobileTopBar() {
         ←
       </Link>
       <b>Travel Circle</b>
-      <span>
+      <div className="flex items-center gap-2">
         <Link href="/safety" aria-label="Safety tools">
           <Icon name="shield" />
         </Link>
-        <button type="button" aria-label="More Circle options">
-          <Icon name="more" />
-        </button>
-      </span>
+        <UserMobileMenu />
+      </div>
     </header>
   );
 }

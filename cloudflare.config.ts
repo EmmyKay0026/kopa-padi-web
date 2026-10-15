@@ -1,6 +1,6 @@
 import { bindings, defineConfig, defineWorker } from "cf/config";
 
-export default defineConfig({
+export default defineConfig(({ isPreview }) => ({
   worker: defineWorker({
     name: "web",
     entrypoint: "vinext/server/fetch-handler",
@@ -12,7 +12,11 @@ export default defineConfig({
       notFoundHandling: "none",
     },
 
-    domains: ["kopa-padi.corper-paddy.com.ng"],
+    ...(isPreview
+      ? {}
+      : {
+          domains: ["kopa-padi.corper-paddy.com.ng"],
+        }),
 
     env: {
       ASSETS: bindings.assets(),
@@ -22,6 +26,8 @@ export default defineConfig({
       ),
 
       NEXT_PUBLIC_CIRCLE_POLL_INTERVAL_MS: bindings.text("5000"),
+
+      NEXT_PUBLIC_GOOGLE_AUTH_ENABLED: bindings.text("false"),
     },
 
     observability: {
@@ -36,4 +42,4 @@ export default defineConfig({
       },
     },
   }),
-});
+}));

@@ -1,6 +1,7 @@
 "use client";
 import { api } from "@/lib/api";
 import Link from "next/link";
+import { UserMobileMenu } from "./user-navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 type Guide = {
   id: string;
@@ -185,7 +186,7 @@ function Shell({ children }: { children: React.ReactNode }) {
           <b className="text-primary">
             ← &nbsp; Kopa-Padi <small className="text-muted">Admin</small>
           </b>
-          <button aria-label="Menu">☷</button>
+          <UserMobileMenu admin />
         </header>
         {children}
       </div>
