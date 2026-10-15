@@ -2,7 +2,7 @@ import { bindings, defineConfig, defineWorker } from "cf/config";
 
 export default defineConfig(({ isPreview }) => ({
   worker: defineWorker({
-    name: "web",
+    name: "kopa-padi-web",
     entrypoint: "vinext/server/fetch-handler",
 
     compatibilityDate: "2026-10-01",
@@ -12,7 +12,6 @@ export default defineConfig(({ isPreview }) => ({
       notFoundHandling: "none",
     },
 
-    // Only production should claim the real custom domain.
     ...(isPreview
       ? {}
       : {
