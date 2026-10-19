@@ -1,6 +1,9 @@
 import { JourneyShareView } from "@/components/journey-share-view";
 
+export const dynamic = 'force-dynamic';
 export const metadata = {
+  referrer: 'no-referrer' as const,
+  robots: {index:false,follow:false},
   title: "Shared journey | Kopa-Padi",
   description: "A private, read-only journey update shared through Kopa-Padi.",
 };

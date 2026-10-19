@@ -3,9 +3,10 @@ import { AppIcon, type AppIconName } from "./app-icon";
 
 import { api } from "@/lib/api";
 import Link from "next/link";
-import { type ReactNode, useCallback, useEffect, useState } from "react";
+import { type ReactNode, useCallback, useEffect, useState, useRef } from "react";
 
 type Shared = {
+  shareExpiresAt: string;
   travellerName: string;
   status: string;
   destination: string;
@@ -513,6 +514,7 @@ function SharePage({ children }: { children: ReactNode }) {
 }
 
 export function JourneyShareView({ token }: { token: string }) {
+  const generation = useRef(0);
   const [data, setData] = useState<Shared | null>(null);
   const [unavailable, setUnavailable] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -521,21 +523,21 @@ export function JourneyShareView({ token }: { token: string }) {
 
   const load = useCallback(
     async (refresh = false) => {
-      if (refresh) setRefreshing(true);
+      const request = ++generation.current;
+      if (refresh) { setRefreshing(true); setData(null); }
       try {
         const shared = await api<Shared>(
-          `/journey-share/${encodeURIComponent(token)}`,
+          `/journey-share/${encodeURIComponent(token)}`, {cache:'no-store',referrerPolicy:'no-referrer'},
         );
+        if (request !== generation.current || document.hidden) return;
         setData(shared);
         setRefreshedAt(new Date());
         setUnavailable(false);
         setRefreshError("");
       } catch {
-        if (refresh)
-          setRefreshError(
-            "Couldn’t refresh right now. The previous update is still shown.",
-          );
-        else setUnavailable(true);
+        if (request !== generation.current) return;
+        setData(null);
+        setUnavailable(true);
       } finally {
         setRefreshing(false);
       }
@@ -545,7 +547,21 @@ export function JourneyShareView({ token }: { token: string }) {
 
   useEffect(() => {
     void load();
+    const timer = setInterval(() => void load(true), 15000);
+    const hide = () => { generation.current++; setData(null); setUnavailable(false); if (!document.hidden) void load(); };
+    document.addEventListener('visibilitychange', hide);
+    window.addEventListener('pageshow', hide);
+    return () => { clearInterval(timer); document.removeEventListener('visibilitychange', hide); window.removeEventListener('pageshow', hide); };
   }, [load]);
+  useEffect(() => {
+    const timer = setInterval(() => setData(current => {
+      if (!current) return current;
+      if (new Date(current.shareExpiresAt).getTime() <= Date.now()) return null;
+      if (current.currentLocation && new Date(current.currentLocation.expiresAt).getTime() <= Date.now()) return {...current,currentLocation:null};
+      return current;
+    }),1000);
+    return () => clearInterval(timer);
+  },[]);
   if (unavailable) return <JourneyUnavailableState />;
   if (!data || !refreshedAt) return <JourneyShareSkeleton />;
 

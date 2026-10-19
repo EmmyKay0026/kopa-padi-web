@@ -1,4 +1,5 @@
 import { bindings, defineConfig, defineWorker } from "cf/config";
+import { previewBuildTarget } from './lib/staging-target.mjs';
 
 export default defineConfig(({ isPreview }) => ({
   worker: defineWorker({
@@ -22,7 +23,7 @@ export default defineConfig(({ isPreview }) => ({
       ASSETS: bindings.assets(),
 
       NEXT_PUBLIC_API_URL: bindings.text(
-        "https://api.kopa-padi.corper-paddy.com.ng",
+        isPreview ? previewBuildTarget(process.env.STAGING_API_URL, process.env.NEXT_PUBLIC_API_URL) : "https://api.kopa-padi.corper-paddy.com.ng",
       ),
 
       NEXT_PUBLIC_CIRCLE_POLL_INTERVAL_MS: bindings.text("5000"),

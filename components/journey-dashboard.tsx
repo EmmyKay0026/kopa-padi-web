@@ -1,8 +1,9 @@
 "use client";
+import { alertStatusMessage } from "@/lib/alert-status.mjs";
 import { AppIcon, type AppIconName } from "./app-icon";
 import Link from "next/link";
 import { UserMobileMenu, UserNavigationSearch } from "./user-navigation";
-import { FormEvent, useCallback, useEffect, useState } from "react";
+import { FormEvent, useCallback, useEffect, useState, useRef } from "react";
 import { api } from "@/lib/api";
 import { authClient } from "@/lib/auth-client";
 import { JourneyGuidePanel } from "./journey-guide-panel";
@@ -689,7 +690,7 @@ function Emergency({
                   api("/journeys/current/emergency/alert-trusted", {
                     method: "POST",
                   }),
-                "Trusted contacts alerted where email sharing is active.",
+                "Request recorded. Check notification status below; email receipt is not guaranteed.",
               )
             }
             className="rounded-xl border bg-white p-3 text-xs font-bold"
@@ -861,6 +862,12 @@ function Sticky({ help }: { help: () => void }) {
 }
 
 export function JourneyDashboard() {
+  const locationConsent = useRef(0);
+  useEffect(() => {
+    const cancel = () => { locationConsent.current++; setShareUrl(''); };
+    window.addEventListener('sharing-withdrawn', cancel);
+    return () => window.removeEventListener('sharing-withdrawn', cancel);
+  },[]);
   const [data, setData] = useState<Data | null>(null),
     [loading, setLoading] = useState(true),
     [busy, setBusy] = useState(false),
@@ -888,8 +895,8 @@ export function JourneyDashboard() {
     setError("");
     setNotice("");
     try {
-      await work();
-      setNotice(success);
+      const result = await work() as { status?: string; queued?: number } | undefined;
+      setNotice(alertStatusMessage(result,success));
       await load();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Action failed");
@@ -914,6 +921,7 @@ export function JourneyDashboard() {
     );
   }
   function shareLocation(audience: "TRUSTED_CONTACT" | "CIRCLE") {
+    if (!navigator.geolocation) { setError("Location access is unavailable in this browser."); return; }
     const who =
       audience === "CIRCLE" ? "your Travel Circle" : "your trusted contacts";
     if (
@@ -924,8 +932,10 @@ export function JourneyDashboard() {
       )
     )
       return;
+    const consent = ++locationConsent.current;
     navigator.geolocation.getCurrentPosition(
-      ({ coords }) =>
+      ({ coords }) => {
+        if (consent !== locationConsent.current) return;
         void act(
           () =>
             api("/journeys/current/emergency/location", {
@@ -937,8 +947,9 @@ export function JourneyDashboard() {
                 consent: true,
               }),
             }),
-          "Temporary location shared.",
-        ),
+          "Temporary location shared until expiry or withdrawal.",
+        );
+      },
       (e) => setError(e.message),
       { enableHighAccuracy: true, timeout: 15000 },
     );
@@ -987,6 +998,7 @@ export function JourneyDashboard() {
                 travel.
               </p>
             </header>
+            <SharingControls />
             {!data ? (
               <Prepare
                 busy={busy}
@@ -1138,6 +1150,7 @@ export function JourneyDashboard() {
                       </Card>
                     ) : null}
                     {active ? <StatusCard data={data} /> : null}
+                    {active && data.journey.journeyMode === "CIRCLE" ? <CircleLocations /> : null}
                     <Contacts
                       data={data}
                       busy={busy}
@@ -1174,4 +1187,53 @@ export function JourneyDashboard() {
       </div>
     </div>
   );
+}
+
+function SharingControls() {
+  const [notice, setNotice] = useState('');
+  const [busy, setBusy] = useState(false);
+  async function withdraw(path: string) {
+    setBusy(true);
+    window.dispatchEvent(new Event('sharing-withdrawn'));
+    try { await api(path,{method:'POST'}); setNotice('Sharing withdrawn. Previously viewed information cannot be recalled.'); }
+    catch { setNotice('Could not withdraw sharing. Please retry.'); }
+    finally { setBusy(false); }
+  }
+  async function status() {
+    try { const r = await api<{notifications:{providerAccepted:number;queued:number;awaitingRetry:number;failedOrCancelled:number}}>('/journeys/sharing');
+      setNotice(`Email requests: ${r.notifications.queued} queued; ${r.notifications.providerAccepted} accepted by provider (receipt not confirmed); ${r.notifications.awaitingRetry} awaiting retry; ${r.notifications.failedOrCancelled} failed or cancelled. Phone-only contacts receive no email.`);
+    } catch { setNotice('Notification status unavailable.'); }
+  }
+  return <section className="rounded-xl border bg-white p-4" aria-label="Sharing privacy controls">
+    <h2 className="font-bold">Your sharing controls</h2><button disabled={busy} onClick={() => void status()} className="rounded-xl border p-3">Check email request status</button>
+    <p className="text-sm">Available after completion and during account restrictions.</p>
+    <div className="mt-3 flex flex-wrap gap-3">
+      <button disabled={busy} className="btn-primary" onClick={() => void withdraw('/journeys/sharing/revoke')}>Revoke all Journey links</button>
+      <button disabled={busy} className="rounded-xl border p-3" onClick={() => void withdraw('/journeys/sharing/location/revoke')}>Withdraw all temporary locations</button>
+    </div><p role="status">{notice}</p>
+  </section>;
+}
+
+function CircleLocations() {
+  const [rows, setRows] = useState<Array<{id:string;latitude:string;longitude:string;expiresAt:string}>>([]);
+  const [status,setStatus] = useState('');
+  const generation=useRef(0);
+  const refresh = useCallback(async () => {
+    const request=++generation.current;
+    setRows([]);
+    try { const next=await api<Array<{id:string;latitude:string;longitude:string;expiresAt:string}>>('/journeys/current/circle-locations',{cache:'no-store'}); if(request!==generation.current||document.hidden)return;setRows(next); setStatus('Only current Circle-audience locations are shown.'); }
+    catch { setStatus('Locations unavailable.'); }
+  },[]);
+  useEffect(() => {
+    void refresh();
+    const timer=setInterval(() => void refresh(),15000);
+    const hide=()=>{generation.current++;setRows([]);if(!document.hidden)void refresh();};
+    document.addEventListener('visibilitychange',hide);
+    return ()=>{generation.current++;clearInterval(timer);document.removeEventListener('visibilitychange',hide);};
+  },[refresh]);
+  useEffect(() => { const timer=setInterval(() => setRows(r => r.filter(x => new Date(x.expiresAt).getTime()>Date.now())),1000); return () => clearInterval(timer); },[]);
+  return <section className="rounded-xl border bg-white p-4"><h2 className="font-bold">Temporary Circle locations</h2>
+    <button onClick={() => void refresh()} className="rounded-xl border p-3">Load current shared locations</button>
+    <p role="status">{status}</p>{rows.map(row => <p key={row.id}>{row.latitude}, {row.longitude} (expires {new Date(row.expiresAt).toLocaleTimeString()})</p>)}
+  </section>;
 }
