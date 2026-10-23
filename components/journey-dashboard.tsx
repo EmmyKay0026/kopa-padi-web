@@ -417,10 +417,11 @@ function Contacts({
   const [adding, setAdding] = useState(false);
   async function add(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    const f = new FormData(e.currentTarget);
+    const form = e.currentTarget;
+    const f = new FormData(form);
     await act(
-      () =>
-        api("/trusted-contacts", {
+      async () => {
+        const result = await api("/trusted-contacts", {
           method: "POST",
           body: JSON.stringify({
             name: f.get("name"),
@@ -428,11 +429,13 @@ function Contacts({
             phone: f.get("phone") || null,
             email: f.get("email") || null,
           }),
-        }),
+        });
+        form.reset();
+        setAdding(false);
+        return result;
+      },
       "Trusted contact added.",
     );
-    e.currentTarget.reset();
-    setAdding(false);
   }
   async function create(id: string) {
     const r = await api<{ url: string }>("/journeys/current/share", {
