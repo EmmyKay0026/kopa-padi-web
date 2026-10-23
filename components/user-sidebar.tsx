@@ -1,4 +1,7 @@
 "use client";
+import { GlyphIcon } from "@/components/glyph-icon";
+import { BrandLogo } from "@/components/brand-logo";
+
 
 import { authClient } from "@/lib/auth-client";
 import { api } from "@/lib/api";
@@ -43,20 +46,7 @@ const navigation: Array<{
   { label: "Safety Centre", href: "/safety", icon: ShieldCheck },
   { label: "Profile", href: "/profile", icon: UserRound },
 ];
-export function UserBrand() {
-  return (
-    <Link href="/app" className="flex items-center gap-2.5 text-foreground">
-      <span className="grid h-10 w-10 place-items-center rounded-xl bg-primary text-xs font-black text-white">
-        KP
-      </span>
-      <span>
-        <b className="block text-[15px] leading-none">Kopa-Padi</b>
-        <small className="mt-1 block text-[8px] text-muted">
-          Travel together. Go further.
-        </small>
-      </span>
-    </Link>
-  );
+export function UserBrand() { return <BrandLogo href="/app" />;
 }
 export function UserSidebar({
   active,

@@ -1,4 +1,7 @@
 "use client";
+import { GlyphIcon } from "@/components/glyph-icon";
+import { BrandLogo } from "@/components/brand-logo";
+
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -15,7 +18,7 @@ const Icon = ({
     aria-hidden="true"
     className={`inline-flex h-10 w-10 items-center justify-center rounded-full bg-primary-light text-lg text-primary ${className}`}
   >
-    {children}
+    <GlyphIcon name={String(children)} size={22} />
   </span>
 );
 const Arrow = () => (
@@ -23,7 +26,7 @@ const Arrow = () => (
     aria-hidden="true"
     className="ml-2 transition-transform group-hover:translate-x-1"
   >
-    -&gt;
+    <GlyphIcon name="→" />
   </span>
 );
 
@@ -36,18 +39,7 @@ const nav = [
   ["FAQs", "#faq-list"],
 ];
 
-function Logo({ light = false }: { light?: boolean }) {
-  return (
-    <Link
-      href="/"
-      className={`flex items-center gap-2 text-xl font-black tracking-tight ${light ? "text-white" : "text-foreground"}`}
-    >
-      <span className="grid h-9 w-9 place-items-center rounded-xl bg-primary text-white">
-        KP
-      </span>
-      Kopa-Padi
-    </Link>
-  );
+function Logo({ light = false }: { light?: boolean }) { return <BrandLogo light={light} />;
 }
 
 function Header() {
@@ -96,7 +88,7 @@ function Header() {
           onClick={() => setOpen(!open)}
           className="grid h-11 w-11 place-items-center rounded-xl border border-current/20 text-xl lg:hidden"
         >
-          {open ? "×" : "☰"}
+          {open ? <><GlyphIcon name="×" /></> : <><GlyphIcon name="☰" /></>}
         </button>
       </nav>
       {open && (
@@ -258,10 +250,10 @@ function Hero() {
 }
 
 const trust = [
-  ["", "Verified Travelers", "Travel with more confidence"],
-  ["", "Smart Route Matching", "Find people going your way"],
-  ["?", "Chat Before Travel", "Get to know your Padi"],
-  ["+", "Safety-Focused", "Tools for a safer journey"],
+  ["shield", "Verified Travelers", "Travel with more confidence"],
+  ["route", "Smart Route Matching", "Find people going your way"],
+  ["chat", "Chat Before Travel", "Get to know your Padi"],
+  ["shield", "Safety-Focused", "Tools for a safer journey"],
 ];
 function TrustStrip() {
   return (
@@ -424,17 +416,17 @@ function HowItWorks() {
 
 const why = [
   [
-    "",
+    "shield",
     "Verified Travelers",
     "Know more about the person you're connecting with.",
   ],
-  ["", "Smarter Matches", "Match based on route, time and travel preferences."],
+  ["route", "Smarter Matches", "Match based on route, time and travel preferences."],
   [
-    "?",
+    "chat",
     "Connect Before Travel",
     "Chat before deciding if someone is the right Padi.",
   ],
-  ["+", "Safety First", "Access tools designed to make shared journeys safer."],
+  ["shield", "Safety First", "Access tools designed to make shared journeys safer."],
 ];
 function Why() {
   return (
@@ -503,7 +495,7 @@ function Matching() {
             <span className="mx-4 h-px flex-1 bg-primary"></span>
             <span>Ibadan</span>
           </div>
-          <p className="mt-2 text-sm text-muted">7:30 AM ? Car</p>
+          <p className="mt-2 text-sm text-muted">7:30 AM <GlyphIcon name="car" /> Car</p>
           <div className="my-5 flex items-center gap-3">
             <span className="h-px flex-1 bg-border" />
             <span className="rounded-full bg-primary px-4 py-2 text-xs font-black text-white">
@@ -516,7 +508,7 @@ function Matching() {
             <span className="mx-4 h-px flex-1 bg-primary"></span>
             <span>Ibadan</span>
           </div>
-          <p className="mt-2 text-sm text-muted">7:45 AM ? Car</p>
+          <p className="mt-2 text-sm text-muted">7:45 AM <GlyphIcon name="car" /> Car</p>
           <div className="mt-5 rounded-xl bg-primary-light p-3 text-center font-black text-primary-dark">
             94% demo match
           </div>
@@ -576,7 +568,7 @@ function Safety() {
           </h3>
           <div className="mt-6 rounded-2xl bg-primary-light p-4">
             <p className="text-xs font-bold text-muted">TRIP STATUS</p>
-            <p className="mt-1 font-black text-primary-dark">? On track</p>
+            <p className="mt-1 font-black text-primary-dark"><GlyphIcon name="✓" /> On track</p>
           </div>
           <Link href="/journey" className="mt-6 block w-full rounded-xl border p-3 text-center font-bold">
             Open Journey Sharing
@@ -793,7 +785,7 @@ function FAQ() {
                 >
                   {q}
                   <span className="text-2xl text-primary">
-                    {open === i ? "" : "+"}
+                    <GlyphIcon name={open === i ? "minus" : "+"} />
                   </span>
                 </button>
               </h3>

@@ -1,0 +1,22 @@
+{
+  "name": "Kopa-Padi",
+  "short_name": "Kopa-Padi",
+  "icons": [
+    {
+      "src": "app_icon_192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "app_icon_512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "theme_color": "#0F766E",
+  "background_color": "#F8FAF9",
+  "display": "standalone",
+  "start_url": "/",
+  "scope": "/",
+  "description": "Travel together. Go further."
+}

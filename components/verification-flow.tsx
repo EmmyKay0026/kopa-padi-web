@@ -1,4 +1,6 @@
 "use client";
+import { GlyphIcon } from "@/components/glyph-icon";
+
 import { api } from "@/lib/api";
 import Link from "next/link";
 import { UserMobileMenu } from "./user-navigation";
@@ -62,10 +64,10 @@ function Shell({ children }: { children: React.ReactNode }) {
       <div className="lg:pl-60">
         <header className="flex h-16 items-center justify-between border-b border-border bg-surface px-5 lg:hidden">
           <Link href="/app" aria-label="Back">
-            ←
+            <GlyphIcon name="←" />
           </Link>
           <Link href="/" className="font-black text-primary">
-            ♟ Kopa-Padi
+            <GlyphIcon name="♟" /> Kopa-Padi
           </Link>
           <UserMobileMenu />
         </header>
@@ -80,7 +82,7 @@ function Shell({ children }: { children: React.ReactNode }) {
                 href={href}
                 className={`flex min-h-11 flex-col items-center justify-center text-[9px] font-bold ${label === "Verification" ? "text-primary" : "text-muted"}`}
               >
-                <span className="text-base">{icon}</span>
+                <span className="text-base"><GlyphIcon name={icon} /></span>
                 {label === "Verification" ? "Verify" : label.replace("My ", "")}
               </Link>
             ))}
@@ -115,7 +117,7 @@ function Progress({ step }: { step: number }) {
           <span
             className={`z-10 grid h-6 w-6 place-items-center rounded-full border ${i + 1 < step ? "border-success bg-success text-white" : i + 1 === step ? "border-primary bg-primary text-white" : "border-border bg-surface"}`}
           >
-            {i + 1 < step ? "✓" : i + 1}
+            {i + 1 < step ? <><GlyphIcon name="✓" /></> : i + 1}
           </span>
           {label}
           {i < 3 && (
@@ -171,7 +173,7 @@ function StatusCard({ kind, reason }: { kind: string; reason?: string }) {
     <section className={`rounded-2xl border p-4 ${color}`}>
       <div className="flex gap-3">
         <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white text-primary">
-          ♢
+          <GlyphIcon name="♢" />
         </span>
         <div>
           <h2 className="text-sm font-black">{title}</h2>
@@ -270,7 +272,7 @@ function FilePicker({
       </div>
       {file && (
         <div className="mt-3 flex items-center gap-3 rounded-xl border border-primary/20 bg-primary-light/20 p-3">
-          <span>▧</span>
+          <span><GlyphIcon name="▧" /></span>
           <p className="min-w-0 flex-1">
             <b className="block truncate text-xs">{file.name}</b>
             <small className="text-muted">
@@ -309,7 +311,7 @@ function FilePicker({
 function Privacy() {
   return (
     <section className="mt-5 rounded-xl bg-primary-light/30 p-4 text-[10px] leading-5 text-muted">
-      <b className="text-primary-dark">▣ &nbsp; Your document is private</b>
+      <b className="text-primary-dark"><GlyphIcon name="▣" /> &nbsp; Your document is private</b>
       <p>
         It is only available to authorized Kopa-Padi reviewers. Other travelers
         cannot access it. Your private last name is not public, and your
@@ -492,7 +494,7 @@ export function VerificationFlow() {
           <StatusCard kind={state} />
           <section className="rounded-2xl border border-success/20 bg-surface p-6 text-center shadow-soft">
             <span className="mx-auto grid h-24 w-24 place-items-center rounded-full bg-success/10 text-5xl text-success">
-              ✓
+              <GlyphIcon name="✓" />
             </span>
             <h2 className="mt-5 text-2xl font-black">You&apos;re verified!</h2>
             <p className="mt-2 text-sm text-muted">
@@ -513,7 +515,7 @@ export function VerificationFlow() {
               ))}
             </dl>
             <Link href="/travel-plans" className="btn-primary mt-6 w-full">
-              Continue to Travel Plans →
+              Continue to Travel Plans <GlyphIcon name="→" />
             </Link>
             <Link
               href="/app"
@@ -806,10 +808,10 @@ function Actions({
         onClick={back}
         className="min-h-12 rounded-xl border font-bold"
       >
-        ← Back
+        <GlyphIcon name="←" /> Back
       </button>
       <button type="button" onClick={next} className="btn-primary">
-        {submit ? "Submit verification" : "Continue →"}
+        {submit ? "Submit verification" : <>Continue <GlyphIcon name="→" /></>}
       </button>
     </div>
   );
@@ -826,7 +828,7 @@ function Review({
   return (
     <section className="mt-4 rounded-xl border border-border p-4">
       <header className="flex justify-between">
-        <b className="text-xs">▣ &nbsp; {title}</b>
+        <b className="text-xs"><GlyphIcon name="▣" /> &nbsp; {title}</b>
         <button onClick={edit} className="text-xs font-bold text-primary">
           Edit
         </button>

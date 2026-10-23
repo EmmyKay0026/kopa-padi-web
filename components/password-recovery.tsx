@@ -1,20 +1,14 @@
 "use client";
+import { GlyphIcon } from "@/components/glyph-icon";
+import { BrandLogo } from "@/components/brand-logo";
+
 import Image from "next/image";
 import Link from "next/link";
 import { FormEvent, ReactNode, useEffect, useState } from "react";
 import { authClient } from "@/lib/auth-client";
 import { Check, Eye, EyeOff, Mail, TriangleAlert } from "lucide-react";
 
-function Logo({ dark = false }: { dark?: boolean }) {
-  return (
-    <Link href="/" className={`recovery-logo ${dark ? "dark" : ""}`}>
-      <span>KP</span>
-      <span>
-        <b>Kopa-Padi</b>
-        <small>Travel together. Go further.</small>
-      </span>
-    </Link>
-  );
+function Logo({ dark = false }: { dark?: boolean }) { return <BrandLogo light={!dark} />;
 }
 function Layout({ children }: { children: ReactNode }) {
   return (
@@ -57,7 +51,7 @@ function Layout({ children }: { children: ReactNode }) {
 const Spinner = () => <span className="auth-spinner" aria-hidden="true" />;
 const Back = () => (
   <Link className="recovery-back" href="/login">
-    ←&nbsp; Back to sign in
+    <GlyphIcon name="←" />&nbsp; Back to sign in
   </Link>
 );
 function Icon({ type }: { type: "mail" | "error" | "check" }) {
@@ -66,7 +60,7 @@ function Icon({ type }: { type: "mail" | "error" | "check" }) {
       {type === "mail" ? (
         <>
           <Mail />
-          <i>✓</i>
+          <i><GlyphIcon name="✓" /></i>
         </>
       ) : type === "error" ? (
         <TriangleAlert />
@@ -138,7 +132,7 @@ export function ForgotPasswordExperience() {
         <form onSubmit={submit} noValidate aria-busy={loading}>
           <label htmlFor="recovery-email">Email address</label>
           <div className="recovery-email">
-            <span>✉</span>
+            <span><GlyphIcon name="✉" /></span>
             <input
               id="recovery-email"
               type="email"
@@ -327,10 +321,10 @@ export function ResetPasswordExperience() {
             <b>ⓘ&nbsp; Password requirements:</b>
             <ul>
               <li className={long ? "met" : ""}>
-                {long ? "✓" : "○"}&nbsp; At least 10 characters
+                {long ? <><GlyphIcon name="✓" /></> : <><GlyphIcon name="○" /></>}&nbsp; At least 10 characters
               </li>
               <li className={match ? "met" : ""}>
-                {match ? "✓" : "○"}&nbsp; Passwords match
+                {match ? <><GlyphIcon name="✓" /></> : <><GlyphIcon name="○" /></>}&nbsp; Passwords match
               </li>
             </ul>
           </div>

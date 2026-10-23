@@ -1,4 +1,7 @@
 "use client";
+import { GlyphIcon } from "@/components/glyph-icon";
+import { BrandLogo } from "@/components/brand-logo";
+
 import { AppIcon, type AppIconName } from "./app-icon";
 import { api } from "@/lib/api";
 import { authClient } from "@/lib/auth-client";
@@ -56,20 +59,7 @@ function Icon({
 }) {
   return <AppIcon name={name} size={size} className={className} />;
 }
-function Logo() {
-  return (
-    <Link href="/" className="flex items-center gap-2">
-      <span className="grid h-9 w-9 place-items-center rounded-xl bg-primary font-black text-white">
-        KP
-      </span>
-      <span>
-        <strong className="block leading-none">Kopa-Padi</strong>
-        <small className="text-[9px] text-muted">
-          Travel together. Go further.
-        </small>
-      </span>
-    </Link>
-  );
+function Logo() { return <BrandLogo href="/" />;
 }
 function Motif() {
   return (

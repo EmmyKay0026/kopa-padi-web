@@ -1,4 +1,7 @@
 "use client";
+import { GlyphIcon } from "@/components/glyph-icon";
+import { BrandLogo } from "@/components/brand-logo";
+
 import { AppIcon, type AppIconName } from "./app-icon";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -22,20 +25,7 @@ function Icon({
 }) {
   return <AppIcon name={name} size={size} className={className} />;
 }
-function Logo() {
-  return (
-    <Link href="/" className="flex items-center gap-3">
-      <span className="grid h-11 w-11 place-items-center rounded-xl bg-primary font-black text-white">
-        KP
-      </span>
-      <span>
-        <strong className="block text-lg leading-none">Kopa-Padi</strong>
-        <small className="text-xs text-muted">
-          Travel together. Go further.
-        </small>
-      </span>
-    </Link>
-  );
+function Logo() { return <BrandLogo href="/" />;
 }
 function Header() {
   const session = authClient.useSession();
@@ -540,7 +530,7 @@ export function LocationSelector() {
             {confirmed && state && lga && (!townId || town) ? <Link
               href={departurePlanHref({ originStateId: state.id, originLgaId: lga.id, originTownId: town?.id ?? "" })}
               className="btn-primary mt-3 w-full"
-            >Continue to Travel Plan <span className="ml-2" aria-hidden="true">→</span></Link> : null}
+            >Continue to Travel Plan <span className="ml-2" aria-hidden="true"><GlyphIcon name="→" /></span></Link> : null}
             {confirmed ? <p className="mt-3 text-center text-xs text-muted">Your departure selection will prefill a new plan. An existing active plan keeps its current details.</p> : null}
           </section>
           <div className="hidden lg:block">
@@ -556,7 +546,7 @@ export function LocationSelector() {
           </details>
         </div>
         <footer className="py-8 text-center">
-          <strong>Kopa-Padi</strong>
+          <div className="flex justify-center"><BrandLogo /></div>
           <p className="text-xs text-muted">Travel together. Go further.</p>
         </footer>
       </main>

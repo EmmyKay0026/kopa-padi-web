@@ -1,4 +1,6 @@
 "use client";
+import { BrandLogo } from "@/components/brand-logo";
+
 import { alertStatusMessage } from "@/lib/alert-status.mjs";
 import { AppIcon, type AppIconName } from "./app-icon";
 import Link from "next/link";
@@ -57,15 +59,7 @@ function Icon({
 }) {
   return <AppIcon name={name} size={size} className={className} />;
 }
-function Logo() {
-  return (
-    <Link href="/" className="flex items-center gap-2">
-      <span className="grid h-9 w-9 place-items-center rounded-xl bg-primary font-black text-white">
-        KP
-      </span>
-      <strong>Kopa-Padi</strong>
-    </Link>
-  );
+function Logo() { return <BrandLogo href="/" />;
 }
 function Sidebar() {
   return <UserSidebar active="Journey Safety" />;

@@ -1,4 +1,6 @@
 "use client";
+import { GlyphIcon } from "@/components/glyph-icon";
+
 
 import { AppIcon, type AppIconName } from "./app-icon";
 import { UserBrand, UserSidebar } from "./user-sidebar";

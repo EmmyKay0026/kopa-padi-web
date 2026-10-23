@@ -1,4 +1,7 @@
 "use client";
+import { GlyphIcon } from "@/components/glyph-icon";
+import { BrandLogo } from "@/components/brand-logo";
+
 import { api } from "@/lib/api";
 import Link from "next/link";
 import { UserMobileMenu } from "./user-navigation";
@@ -160,15 +163,7 @@ function Shell({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-background">
       <aside className="fixed inset-y-0 left-0 hidden w-56 border-r bg-white p-5 lg:flex lg:flex-col">
-        <Link href="/" className="flex items-center gap-2">
-          <b className="grid h-9 w-9 place-items-center rounded-xl bg-primary text-xs text-white">
-            KP
-          </b>
-          <span>
-            <strong className="block">Kopa-Padi</strong>
-            <small className="text-[8px] text-muted">Admin</small>
-          </span>
-        </Link>
+        <div><BrandLogo /><small className="block text-xs text-muted">Admin</small></div>
         <nav className="mt-7 space-y-1" aria-label="Admin navigation">
           {nav.map((n) => (
             <Link
@@ -176,7 +171,7 @@ function Shell({ children }: { children: React.ReactNode }) {
               href={n === "Journey Guides" ? "/admin/journey-guides" : "#"}
               className={`flex min-h-10 items-center rounded-xl px-3 text-xs font-bold ${n === "Journey Guides" ? "bg-primary/10 text-primary" : "text-muted hover:bg-background"}`}
             >
-              ◇ &nbsp; {n}
+              <GlyphIcon name="◇" /> &nbsp; {n}
             </Link>
           ))}
         </nav>
@@ -184,7 +179,7 @@ function Shell({ children }: { children: React.ReactNode }) {
       <div className="lg:pl-56">
         <header className="flex h-16 items-center justify-between border-b bg-white px-5 lg:hidden">
           <b className="text-primary">
-            ← &nbsp; Kopa-Padi <small className="text-muted">Admin</small>
+            <GlyphIcon name="←" /> &nbsp; Kopa-Padi <small className="text-muted">Admin</small>
           </b>
           <UserMobileMenu admin />
         </header>
@@ -281,7 +276,7 @@ function Confirm({
           className="ml-auto h-10 w-10"
           aria-label="Close"
         >
-          ×
+          <GlyphIcon name="×" />
         </button>
         <span
           className={`mx-auto grid h-16 w-16 place-items-center rounded-full text-2xl ${item.action === "retire" ? "bg-danger/10 text-danger" : item.action === "mark-review" ? "bg-warning/15 text-warning" : "bg-primary-light text-primary"}`}
@@ -294,10 +289,10 @@ function Confirm({
         <p className="mt-2 text-xs leading-5 text-muted">{t[1]}</p>
         {item.action === "publish" && (
           <ul className="mt-4 rounded-xl bg-background p-3 text-left text-[10px] text-muted">
-            <li>✓ Route reviewed</li>
-            <li>✓ Safety notes checked</li>
-            <li>✓ Destination verified</li>
-            <li>✓ Sources traceable</li>
+            <li><GlyphIcon name="✓" /> Route reviewed</li>
+            <li><GlyphIcon name="✓" /> Safety notes checked</li>
+            <li><GlyphIcon name="✓" /> Destination verified</li>
+            <li><GlyphIcon name="✓" /> Sources traceable</li>
           </ul>
         )}
         <div className="mt-6 grid grid-cols-2 gap-3">
@@ -332,9 +327,9 @@ function DetailPanel({
   return (
     <aside className="fixed inset-y-0 right-0 z-40 w-full overflow-y-auto border-l bg-white p-5 shadow-2xl sm:max-w-xl">
       <header className="flex items-center justify-between">
-        <button onClick={onClose}>← &nbsp; Guide details</button>
+        <button onClick={onClose}><GlyphIcon name="←" /> &nbsp; Guide details</button>
         <button onClick={onClose} className="h-10 w-10">
-          ×
+          <GlyphIcon name="×" />
         </button>
       </header>
       <div className="mt-6 flex items-start justify-between gap-3">
@@ -388,7 +383,7 @@ function DetailPanel({
           {detail.legs.map((l) => (
             <li key={l.sequenceNumber} className="rounded-xl border p-4">
               <b>
-                {l.sequenceNumber}. {l.fromLabel} → {l.toLabel}
+                {l.sequenceNumber}. {l.fromLabel} <GlyphIcon name="→" /> {l.toLabel}
               </b>
               <p className="mt-2 text-xs text-muted">{l.instruction}</p>
             </li>
@@ -652,7 +647,7 @@ function Builder({
           className="h-10 w-10"
           aria-label="Close builder"
         >
-          ×
+          <GlyphIcon name="×" />
         </button>
       </header>
       <div className="grid min-h-[calc(100vh-73px)] lg:grid-cols-[150px_1fr]">
@@ -870,7 +865,7 @@ function Builder({
                 {draft.legs.map((l, i) => (
                   <section key={i} className="mb-4 rounded-xl border p-4">
                     <header className="flex justify-between">
-                      <b className="text-xs">☷ &nbsp; Leg {i + 1}</b>
+                      <b className="text-xs"><GlyphIcon name="☷" /> &nbsp; Leg {i + 1}</b>
                       <span>
                         <button
                           onClick={() => move(i, -1)}
@@ -893,7 +888,7 @@ function Builder({
                             className="ml-3 text-danger"
                             aria-label={`Remove leg ${i + 1}`}
                           >
-                            ×
+                            <GlyphIcon name="×" />
                           </button>
                         )}
                       </span>
@@ -1224,7 +1219,7 @@ function Builder({
                 onClick={() => setStep((v) => v - 1)}
                 className="min-h-12 rounded-xl border font-bold"
               >
-                ← Back
+                <GlyphIcon name="←" /> Back
               </button>
             ) : (
               <button
@@ -1236,7 +1231,7 @@ function Builder({
             )}
             {step < 4 ? (
               <button onClick={next} className="btn-primary">
-                Next →
+                Next <GlyphIcon name="→" />
               </button>
             ) : (
               <button
@@ -1255,7 +1250,7 @@ function Builder({
           <section className="w-full max-w-3xl rounded-2xl bg-white p-5">
             <header className="flex justify-between">
               <h3 className="font-black">Advanced JSON editor</h3>
-              <button onClick={() => setAdvanced(false)}>×</button>
+              <button onClick={() => setAdvanced(false)}><GlyphIcon name="×" /></button>
             </header>
             <textarea
               className="mt-4 h-[55vh] w-full rounded-xl border p-4 font-mono text-xs"
@@ -1659,7 +1654,7 @@ export function JourneyGuideAdmin() {
                         onClick={() => setPage((v) => v - 1)}
                         className="h-9 w-9 rounded-lg border"
                       >
-                        ←
+                        <GlyphIcon name="←" />
                       </button>
                       <span className="grid h-9 min-w-9 place-items-center rounded-lg bg-primary-light font-bold text-primary">
                         {page}
@@ -1669,7 +1664,7 @@ export function JourneyGuideAdmin() {
                         onClick={() => setPage((v) => v + 1)}
                         className="h-9 w-9 rounded-lg border"
                       >
-                        →
+                        <GlyphIcon name="→" />
                       </button>
                     </div>
                   </footer>
@@ -1708,7 +1703,7 @@ export function JourneyGuideAdmin() {
           className={`fixed bottom-6 right-6 z-[60] max-w-sm rounded-xl border bg-white p-4 text-xs font-bold shadow-xl ${toast.type === "error" ? "border-danger/20 text-danger" : "border-success/20 text-success"}`}
         >
           <button onClick={() => setToast(null)} className="float-right ml-5">
-            ×
+            <GlyphIcon name="×" />
           </button>
           {toast.text}
         </div>

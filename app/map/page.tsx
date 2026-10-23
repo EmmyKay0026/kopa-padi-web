@@ -1,3 +1,4 @@
+import { BrandLogo } from "@/components/brand-logo";
 import { ArrowLeft, MapPin, Route, Users } from 'lucide-react';
 import Link from 'next/link';
 
@@ -19,7 +20,7 @@ export default async function StateMapPage({ searchParams }: PageProps) {
       <header className="border-b border-border bg-white">
         <div className="container-page flex min-h-20 items-center justify-between gap-4">
           <Link href="/#explore-nigeria" className="inline-flex items-center gap-2 text-sm font-bold text-primary"><ArrowLeft size={18} /> Back to map</Link>
-          <Link href="/" className="flex items-center gap-2 text-lg font-black tracking-tight text-foreground"><span className="grid h-9 w-9 place-items-center rounded-xl bg-primary text-white">KP</span>Kopa-Padi</Link>
+          <BrandLogo />
         </div>
       </header>
 

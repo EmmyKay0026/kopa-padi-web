@@ -1,4 +1,7 @@
 "use client";
+import { GlyphIcon } from "@/components/glyph-icon";
+import { BrandLogo } from "@/components/brand-logo";
+
 
 import { api } from "@/lib/api";
 import Link from "next/link";
@@ -68,15 +71,7 @@ function Shell({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <aside className="fixed inset-y-0 left-0 hidden w-56 border-r border-border bg-surface p-5 lg:flex lg:flex-col">
-        <Link href="/" className="flex items-center gap-2">
-          <span className="grid h-9 w-9 place-items-center rounded-xl bg-primary text-xs font-black text-white">
-            KP
-          </span>
-          <span>
-            <b className="block">Kopa-Padi</b>
-            <small className="text-[8px] text-muted">Admin</small>
-          </span>
-        </Link>
+        <div><BrandLogo /><small className="block text-xs text-muted">Admin</small></div>
         <nav className="mt-7 space-y-1" aria-label="Admin navigation">
           {nav.map((item) => (
             <Link
@@ -91,7 +86,7 @@ function Shell({ children }: { children: React.ReactNode }) {
               aria-current={item === "Safety" ? "page" : undefined}
               className={`flex min-h-10 items-center rounded-xl px-3 text-xs font-bold ${item === "Safety" ? "bg-primary/10 text-primary" : "text-muted hover:bg-background hover:text-foreground"}`}
             >
-              ◇ &nbsp; {item}
+              <GlyphIcon name="◇" /> &nbsp; {item}
             </Link>
           ))}
         </nav>
@@ -99,7 +94,7 @@ function Shell({ children }: { children: React.ReactNode }) {
       <div className="lg:pl-56">
         <header className="flex h-16 items-center justify-between border-b border-border bg-surface px-5 lg:hidden">
           <b className="text-primary">
-            ← &nbsp; Kopa-Padi <small className="text-muted">Admin</small>
+            <GlyphIcon name="←" /> &nbsp; Kopa-Padi <small className="text-muted">Admin</small>
           </b>
           <UserMobileMenu admin />
         </header>
@@ -189,7 +184,7 @@ function Metric({
         <span
           className={`grid h-11 w-11 place-items-center rounded-xl text-xl ${tones[tone]}`}
         >
-          {icon}
+          <GlyphIcon name={icon} />
         </span>
         <div>
           <p className="text-2xl font-black tracking-[-.04em]">{value}</p>
@@ -288,7 +283,7 @@ export function SafetyAdmin() {
           </div>
           <div className="flex items-center gap-3">
             <label className="hidden min-w-80 items-center gap-2 rounded-lg border border-border bg-surface px-3 py-2 text-xs text-muted md:flex">
-              ⌕
+              <GlyphIcon name="⌕" />
               <input
                 className="w-full bg-transparent outline-none"
                 placeholder="Search reports, users, or case IDs..."
@@ -300,7 +295,7 @@ export function SafetyAdmin() {
               className="grid h-10 w-10 place-items-center rounded-lg border border-border"
               aria-label="Operational status"
             >
-              ♧
+              <GlyphIcon name="♧" />
             </Link>
             <Link href="/profile" className="rounded-lg px-2 text-xs font-bold">
               A &nbsp; Admin profile
@@ -364,7 +359,7 @@ export function SafetyAdmin() {
               >
                 <div className="flex gap-3">
                   <span className="grid h-11 w-11 place-items-center rounded-xl bg-primary-light/30 text-xl text-primary">
-                    ▤
+                    <GlyphIcon name="▤" />
                   </span>
                   <span>
                     <b className="block text-xs">View audit logs</b>
@@ -391,7 +386,7 @@ export function SafetyAdmin() {
                 </div>
                 <div className="grid gap-2 border-b border-border p-3 md:grid-cols-[1.4fr_repeat(4,1fr)]">
                   <label className="flex min-h-10 items-center gap-2 rounded-lg border border-border px-3 text-xs text-muted">
-                    ⌕
+                    <GlyphIcon name="⌕" />
                     <input
                       className="w-full bg-transparent outline-none"
                       placeholder="Search reports..."
@@ -409,7 +404,7 @@ export function SafetyAdmin() {
                       key={x}
                       className="min-h-10 rounded-lg border border-border px-3 text-left text-[10px] text-muted"
                     >
-                      {x}⌄
+                      {x}<GlyphIcon name="⌄" />
                     </button>
                   ))}
                 </div>
@@ -488,7 +483,7 @@ export function SafetyAdmin() {
                     Showing 1–{Math.min(10, visible.length)} of {visible.length}
                   </span>
                   <span className="font-bold text-primary">
-                    ‹ &nbsp; 1 &nbsp; 2 &nbsp; 3 &nbsp; ›
+                    <GlyphIcon name="‹" /> &nbsp; 1 &nbsp; 2 &nbsp; 3 &nbsp; <GlyphIcon name="›" />
                   </span>
                 </footer>
               </Card>
@@ -529,7 +524,7 @@ export function SafetyAdmin() {
               onClick={() => setToast(null)}
               aria-label="Dismiss"
             >
-              ×
+              <GlyphIcon name="×" />
             </button>
             {toast}
           </div>
@@ -569,7 +564,7 @@ function ReportPanel({
             <Badge value={r.severity} />
           </div>
         </div>
-        <span className="text-muted">×</span>
+        <span className="text-muted"><GlyphIcon name="×" /></span>
       </header>
       <nav className="flex border-b border-border text-[10px] font-bold text-muted">
         <button className="border-b-2 border-primary px-4 py-3 text-primary">
@@ -645,7 +640,7 @@ function ReportPanel({
               onClick={() => onPanel("case")}
               className="min-h-10 rounded-lg border border-border px-2 text-[10px] font-bold"
             >
-              ▤ Create case
+              <GlyphIcon name="▤" /> Create case
             </button>
             <button
               onClick={() => onPanel("note")}
@@ -659,13 +654,13 @@ function ReportPanel({
               onClick={() => onPanel("evidence")}
               className="mt-2 text-[10px] font-bold text-primary"
             >
-              Review authorised message evidence →
+              Review authorised message evidence <GlyphIcon name="→" />
             </button>
           )}
         </section>
         <section className="rounded-xl border border-danger/20 bg-danger/5 p-3">
           <h3 className="text-xs font-black text-danger">
-            ⚠ Priority guidance
+            <GlyphIcon name="⚠" /> Priority guidance
           </h3>
           <p className="mt-2 text-[10px] leading-4 text-danger">
             Review critical reports as soon as possible and follow established
@@ -675,7 +670,7 @@ function ReportPanel({
             onClick={() => onPanel("restriction")}
             className="mt-3 text-[10px] font-bold text-danger"
           >
-            Apply a restriction →
+            Apply a restriction <GlyphIcon name="→" />
           </button>
         </section>
       </div>
@@ -731,7 +726,7 @@ function ActionPanel({
         <header className="flex items-center justify-between">
           <h2 className="font-black">{title}</h2>
           <button onClick={close} aria-label="Close">
-            ×
+            <GlyphIcon name="×" />
           </button>
         </header>
         {kind === "evidence" ? (

@@ -1,4 +1,7 @@
 "use client";
+import { GlyphIcon } from "@/components/glyph-icon";
+import { BrandLogo } from "@/components/brand-logo";
+
 import { AppIcon, type AppIconName } from "./app-icon";
 
 import { api } from "@/lib/api";
@@ -139,18 +142,7 @@ function Avatar({
     </span>
   );
 }
-function Brand() {
-  return (
-    <Link href="/" className="circle-brand" aria-label="Kopa-Padi home">
-      <span className="circle-brand-mark">
-        <Icon name="people" size={23} />
-      </span>
-      <span>
-        <b>Kopa-Padi</b>
-        <small>Travel together. Go further.</small>
-      </span>
-    </Link>
-  );
+function Brand() { return <BrandLogo href="/app" />;
 }
 
 function AppSidebar({ unreadCount }: { unreadCount: number }) {
@@ -188,7 +180,7 @@ function MobileTopBar() {
   return (
     <header className="circle-mobile-topbar">
       <Link href="/travel-plans" aria-label="Back to my trips">
-        ←
+        <GlyphIcon name="←" />
       </Link>
       <b>Travel Circle</b>
       <div className="flex items-center gap-2">
@@ -205,7 +197,7 @@ function PageHeader() {
   return (
     <header className="circle-page-header circle-enter">
       <Link href="/travel-plans" className="circle-back-link">
-        ← <span>Back to My Trips</span>
+        <GlyphIcon name="←" /> <span>Back to My Trips</span>
       </Link>
       <div>
         <h1>Your Travel Circle</h1>
@@ -451,7 +443,7 @@ function ChatMessage({
             {message.deletedAt ? null : (
               <>
                 <span>Delivered</span>
-                <span aria-hidden="true">✓✓</span>
+                <span aria-hidden="true"><GlyphIcon name="✓" /><GlyphIcon name="✓" /></span>
                 <button type="button" onClick={onDelete}>
                   Delete
                 </button>

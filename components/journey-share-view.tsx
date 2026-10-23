@@ -1,4 +1,6 @@
 "use client";
+import { BrandLogo } from "@/components/brand-logo";
+
 import { AppIcon, type AppIconName } from "./app-icon";
 
 import { api } from "@/lib/api";
@@ -35,22 +37,7 @@ function Icon({
 }) {
   return <AppIcon name={name} size={size} className={className} />;
 }
-function Brand({ footer = false }: { footer?: boolean }) {
-  return (
-    <Link
-      href="/"
-      className={`share-brand ${footer ? "footer" : ""}`}
-      aria-label="Kopa-Padi home"
-    >
-      <span>
-        <Icon name="people" size={footer ? 18 : 25} />
-      </span>
-      <span>
-        <b>Kopa-Padi</b>
-        <small>Travel together. Go further.</small>
-      </span>
-    </Link>
-  );
+function Brand({ footer = false }: { footer?: boolean }) { return <BrandLogo className={footer ? "opacity-80" : ""} />;
 }
 
 function JourneyShareHeader() {

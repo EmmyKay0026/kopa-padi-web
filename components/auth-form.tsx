@@ -1,4 +1,6 @@
 "use client";
+import { GlyphIcon } from "@/components/glyph-icon";
+
 
 import { authClient } from "@/lib/auth-client";
 import { Eye, EyeOff } from "lucide-react";
@@ -158,7 +160,7 @@ function SubmitButton({
           aria-hidden="true"
           className="transition-transform group-hover:translate-x-1"
         >
-          →
+          <GlyphIcon name="→" />
         </span>
       ) : null}
     </button>
