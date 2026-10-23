@@ -1,0 +1,23 @@
+{
+  "name": "Kopa-Padi",
+  "version": "1.0",
+  "status": "Brand logo asset candidate",
+  "colors": {
+    "primary": "#0F766E",
+    "primaryDark": "#115E59",
+    "primaryLight": "#CCFBF1",
+    "accent": "#3B82F6",
+    "logoInk": "#062F30",
+    "background": "#F8FAF9",
+    "white": "#FFFFFF"
+  },
+  "preferredAssets": {
+    "brandPrimary": "SVG/01_primary_stacked_with_tagline.svg",
+    "brandHorizontal": "SVG/02_horizontal.svg",
+    "appIcon": "SVG/06_app_icon.svg",
+    "monoReverse": "SVG/04_reversed_white.svg",
+    "favicon": "Web_App/favicon.svg"
+  },
+  "svgPathsAreOutlined": true,
+  "imagesEmbedded": false
+}
