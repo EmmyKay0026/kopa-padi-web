@@ -1,5 +1,5 @@
 import { bindings, defineConfig, defineWorker } from "cf/config";
-import { previewBuildTarget } from './lib/staging-target.mjs';
+import { previewBuildTarget } from "./lib/staging-target.mjs";
 
 export default defineConfig(({ isPreview }) => ({
   worker: defineWorker({
@@ -16,14 +16,19 @@ export default defineConfig(({ isPreview }) => ({
     ...(isPreview
       ? {}
       : {
-          domains: ["kopa-padi.corper-paddy.com.ng"],
+          domains: ["kopa-padi.com.ng"],
         }),
 
     env: {
       ASSETS: bindings.assets(),
 
       NEXT_PUBLIC_API_URL: bindings.text(
-        isPreview ? previewBuildTarget(process.env.STAGING_API_URL, process.env.NEXT_PUBLIC_API_URL) : "https://api.kopa-padi.corper-paddy.com.ng",
+        isPreview
+          ? previewBuildTarget(
+              process.env.STAGING_API_URL,
+              process.env.NEXT_PUBLIC_API_URL,
+            )
+          : "https://api.kopa-padi.corper-paddy.com.ng",
       ),
 
       NEXT_PUBLIC_CIRCLE_POLL_INTERVAL_MS: bindings.text("5000"),

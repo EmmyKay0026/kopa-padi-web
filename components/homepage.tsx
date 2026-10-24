@@ -833,7 +833,7 @@ function Footer() {
   const groups = {
     Product: [["How It Works", "/#how-it-works"], ["Matching Status", "/matching"], ["Travel Plan", "/travel-plans"], ["Journey Safety", "/journey"]],
     Discover: [["About Kopa-Padi", "/#why"], ["Travel Tips", "/#blog"], ["Explore Nigeria", "/#explore-nigeria"]],
-    Support: [["FAQs", "/#faq-list"], ["Safety Centre", "/safety"], ["Report a Concern", "/safety"]],
+    Support: [["Terms and Conditions", "/terms"], ["FAQs", "/#faq-list"], ["Safety Centre", "/safety"], ["Report a Concern", "/safety"]],
     Account: [["Profile", "/profile"], ["Verification", "/verification"], ["Log In", "/login"], ["Sign Up", "/register"]],
   };
   return (
