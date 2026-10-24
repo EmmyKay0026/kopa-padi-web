@@ -1,4 +1,6 @@
 'use client';
+import { GlyphIcon } from "@/components/glyph-icon";
+
 import {FormEvent,useEffect,useState} from 'react';
 import {api} from '@/lib/api';
 type Guide={matchScope:string;confidence:string;guide:{id:string;title:string;summary:string;version:number;lastReviewedAt:string|null;alternativeNotes:string|null};destination:{name:string;address:string|null;informationType:string};guidanceType:string;legs:{id:string;sequenceNumber:number;legType:string;fromLabel:string;toLabel:string;transportMode:string|null;instruction:string;connectionNotes:string|null;safetyNotes:string|null;estimatedDurationMinutes:number|null;confidenceLevel:string;sourceType:string}[];sources:{id:string;sourceType:string;title:string;reference:string}[]};

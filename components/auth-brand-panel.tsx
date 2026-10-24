@@ -1,5 +1,5 @@
+import { BrandLogo } from "@/components/brand-logo";
 import Image from "next/image";
-import Link from "next/link";
 import type { AuthMode } from "./auth-form";
 
 export function AuthBrandPanel({ mode }: { mode: AuthMode }) {
@@ -16,7 +16,7 @@ export function AuthBrandPanel({ mode }: { mode: AuthMode }) {
       <div className="absolute inset-0 bg-[linear-gradient(145deg,rgba(7,29,26,.94),rgba(15,118,110,.62))]" />
       <div className="auth-brand-glow" aria-hidden="true" />
       <div className="auth-brand-content">
-        <Link href="/" className="auth-logo" aria-label="Kopa-Padi home"><span>KP</span>Kopa-Padi</Link>
+        <BrandLogo light className="auth-logo" />
         <div className="auth-brand-copy">
           <p className="text-xs font-black uppercase tracking-[.26em] text-teal-100">Your journey, shared</p>
           <h2>Travel together.<br />Go further.</h2>

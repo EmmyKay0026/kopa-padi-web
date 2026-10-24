@@ -1,7 +1,8 @@
 "use client";
+import { BrandLogo } from "@/components/brand-logo";
+
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { AuthBrandPanel } from "./auth-brand-panel";
 import { AuthMode, SignInForm, SignUpForm } from "./auth-form";
 
@@ -48,7 +49,7 @@ export function AuthExperience({ initialMode }: { initialMode: AuthMode }) {
   return (
     <main className="auth-page">
       <div className="auth-mobile-topbar">
-        <Link href="/" className="auth-logo auth-logo-dark"><span>KP</span>Kopa-Padi</Link>
+        <BrandLogo className="auth-logo auth-logo-dark" />
         <span>{mode === "signup" ? "Create an account" : "Sign in"}</span>
       </div>
       <section className="auth-shell" data-mode={mode} aria-label="Kopa-Padi authentication">

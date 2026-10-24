@@ -1,4 +1,7 @@
 "use client";
+import { GlyphIcon } from "@/components/glyph-icon";
+import { BrandLogo } from "@/components/brand-logo";
+
 import { api } from "@/lib/api";
 import Link from "next/link";
 import { UserMobileMenu } from "./user-navigation";
@@ -49,7 +52,7 @@ const navigation = [
   "Geography",
   "Journey Guides",
   "Operations",
-  "Reports",
+  "Bug reports",
   "Safety",
   "Content",
   "Audit Logs",
@@ -59,24 +62,16 @@ function Shell({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <aside className="fixed inset-y-0 left-0 hidden w-56 border-r border-border bg-surface p-5 lg:flex lg:flex-col">
-        <Link href="/" className="flex items-center gap-2">
-          <span className="grid h-9 w-9 place-items-center rounded-xl bg-primary text-xs font-black text-white">
-            KP
-          </span>
-          <span>
-            <b className="block">Kopa-Padi</b>
-            <small className="text-[8px] text-muted">Admin</small>
-          </span>
-        </Link>
+        <div><BrandLogo /><small className="block text-xs text-muted">Admin</small></div>
         <nav className="mt-7 space-y-1" aria-label="Admin navigation">
           {navigation.map((label) => (
             <Link
               key={label}
-              href={label === "Operations" ? "/admin/operations" : "#"}
+              href={label === "Operations" ? "/admin/operations" : label === "Bug reports" ? "/admin/bug-reports" : "#"}
               aria-current={label === "Operations" ? "page" : undefined}
               className={`flex min-h-10 items-center rounded-xl px-3 text-xs font-bold ${label === "Operations" ? "bg-primary/10 text-primary" : "text-muted hover:bg-background hover:text-foreground"}`}
             >
-              ◇ &nbsp; {label}
+              <GlyphIcon name="◇" /> &nbsp; {label}
             </Link>
           ))}
         </nav>
@@ -84,7 +79,7 @@ function Shell({ children }: { children: React.ReactNode }) {
       <div className="lg:pl-56">
         <header className="flex h-16 items-center justify-between border-b border-border bg-surface px-5 lg:hidden">
           <b className="text-primary">
-            ← &nbsp; Kopa-Padi <small className="text-muted">Admin</small>
+            <GlyphIcon name="←" /> &nbsp; Kopa-Padi <small className="text-muted">Admin</small>
           </b>
           <UserMobileMenu admin />
         </header>
@@ -186,7 +181,7 @@ function ValueCard({
         <span
           className={`grid h-11 w-11 shrink-0 place-items-center rounded-xl text-xl ${tones[tone]}`}
         >
-          {icon}
+          <GlyphIcon name={icon} />
         </span>
         <div>
           <p className="text-2xl font-black tracking-[-.04em]">{value}</p>
@@ -219,7 +214,7 @@ function RatioCard({
   return (
     <Card>
       <div className="flex items-center gap-2 text-primary">
-        <span>{icon}</span>
+        <span><GlyphIcon name={icon} /></span>
         <h3 className="text-xs font-black text-foreground">{title}</h3>
       </div>
       <p className="mt-5 text-2xl font-black tracking-[-.04em]">
@@ -347,7 +342,7 @@ export function OperationsDashboard() {
                   <span className="auth-spinner" /> Refreshing...
                 </>
               ) : (
-                <>↻ &nbsp; Refresh status</>
+                <><GlyphIcon name="↻" /> &nbsp; Refresh status</>
               )}
             </button>
           </div>
@@ -504,7 +499,7 @@ export function OperationsDashboard() {
                     />
                     <Card>
                       <div className="flex gap-2 text-primary">
-                        ♟{" "}
+                        <GlyphIcon name="♟" />{" "}
                         <h3 className="text-xs font-black text-foreground">
                           Travel circles
                         </h3>
@@ -532,7 +527,7 @@ export function OperationsDashboard() {
                     </Card>
                     <Card>
                       <div className="flex gap-2 text-primary">
-                        ▣{" "}
+                        <GlyphIcon name="▣" />{" "}
                         <h3 className="text-xs font-black text-foreground">
                           Journey outcomes
                         </h3>
@@ -558,7 +553,7 @@ export function OperationsDashboard() {
                     />
                     <Card>
                       <div className="flex gap-2 text-primary">
-                        ▤{" "}
+                        <GlyphIcon name="▤" />{" "}
                         <h3 className="text-xs font-black text-foreground">
                           Journey guides
                         </h3>
@@ -586,7 +581,7 @@ export function OperationsDashboard() {
                     />
                     <Card>
                       <div className="flex gap-2 text-primary">
-                        ▥{" "}
+                        <GlyphIcon name="▥" />{" "}
                         <h3 className="text-xs font-black text-foreground">
                           Matching performance
                         </h3>
@@ -642,7 +637,7 @@ export function OperationsDashboard() {
                           </b>
                           <span className="sm:mt-2 sm:block">{l}</span>
                           {i < 6 && (
-                            <i className="hidden text-primary sm:block">→</i>
+                            <i className="hidden text-primary sm:block"><GlyphIcon name="→" /></i>
                           )}
                         </li>
                       ))}
@@ -678,7 +673,7 @@ export function OperationsDashboard() {
             className={`fixed bottom-6 right-5 z-50 rounded-xl border bg-white p-4 text-xs font-bold shadow-xl ${toast.includes("could") ? "border-danger/20 text-danger" : "border-success/20 text-success"}`}
           >
             <button onClick={() => setToast(null)} className="ml-5">
-              ×
+              <GlyphIcon name="×" />
             </button>
             {toast}
           </div>
@@ -704,7 +699,7 @@ function Health({
           className={`h-3 w-3 rounded-full ${good ? "bg-success" : "bg-warning"}`}
         />
         <span className="grid h-9 w-9 place-items-center rounded-lg bg-background">
-          {label === "API" ? "▤" : "▣"}
+          {label === "API" ? <><GlyphIcon name="▤" /></> : <><GlyphIcon name="▣" /></>}
         </span>
         <p>
           <b className="block text-xs">{label}</b>
@@ -729,7 +724,7 @@ function InfoRow({
   return (
     <div className="flex items-center gap-3 rounded-xl border border-border p-3">
       <span className="grid h-9 w-9 place-items-center rounded-lg bg-primary-light/30 text-primary">
-        {icon}
+        <GlyphIcon name={icon} />
       </span>
       <p>
         <b className="block text-[10px] text-muted">{label}</b>

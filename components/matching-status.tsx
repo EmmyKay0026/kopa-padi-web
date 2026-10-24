@@ -1,4 +1,7 @@
 "use client";
+import { GlyphIcon } from "@/components/glyph-icon";
+import { BrandLogo } from "@/components/brand-logo";
+
 import { AppIcon, type AppIconName } from "./app-icon";
 
 import Link from "next/link";
@@ -107,21 +110,7 @@ const circleLabel = (v: string) =>
     FULL: "Circle complete",
     LOCKED: "Circle locked",
   })[v] ?? human(v);
-function Logo() {
-  return (
-    <Link className="matching-brand" href="/app" aria-label="Kopa-Padi home">
-      <span className="matching-brand-mark" aria-hidden="true">
-        <i />
-        <i />
-        <i />
-        <i />
-      </span>
-      <span>
-        <b>Kopa-Padi</b>
-        <small>Travel together. Go further.</small>
-      </span>
-    </Link>
-  );
+function Logo() { return <BrandLogo href="/app" />;
 }
 function Header({ name }: { name: string }) {
   return (
@@ -716,7 +705,7 @@ export function MatchingStatus() {
       <Header name={session.data?.user.name?.trim() || "Traveler"} />
       <main className="matching-container">
         <Link className="matching-back" href="/app">
-          ← <span>Back</span>
+          <GlyphIcon name="←" /> <span>Back</span>
         </Link>
         <div className="matching-title matching-enter">
           <h1>Matching</h1>

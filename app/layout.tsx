@@ -1,7 +1,17 @@
+import { BugReportWidget } from "@/components/bug-report-widget";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthGuard } from "@/components/auth-guard";
 export const metadata = {
+  icons: {
+    icon: [
+      { url: "/Web_App/favicon.svg", type: "image/svg+xml" },
+      { url: "/Web_App/favicon-32.png", type: "image/png", sizes: "32x32" },
+      { url: "/Web_App/favicon.ico" },
+    ],
+    apple: [{ url: "/Web_App/apple-touch-icon.png", sizes: "180x180" }],
+  },
+  manifest: "/Web_App/site.webmanifest",
   title: "Kopa-Padi - Travel together. Go further.",
   description:
     "Find compatible travel companions going your way and travel with more confidence.",
@@ -13,6 +23,7 @@ export default function Layout({
     <html suppressHydrationWarning lang="en">
       <body>
         <AuthGuard>{children}</AuthGuard>
+        <BugReportWidget />
         <Toaster richColors position="top-right" />
       </body>
     </html>

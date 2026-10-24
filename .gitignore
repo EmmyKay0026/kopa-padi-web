@@ -1,17 +1,59 @@
-/dist/
-.vinext/
-.cloudflare/
-node_modules/
-.next/
-dist/
-coverage/
-.env
-*.env
-.env.production
 private/
 playwright-report/
 test-results/
 *.log
-.tmp-edge-cdp-2/
 DEPLOYMENT.md
 *.md
+
+# Dependencies and generated builds
+node_modules/
+dist/
+.next/
+.vinext/
+.cloudflare/
+.wrangler/
+coverage/
+*.tsbuildinfo
+
+# Environment files and backups
+.env*
+*.env
+!.env.example
+!.env.sample
+
+# Credentials and private keys
+*.pem
+*.key
+*.p12
+*.pfx
+credentials*.json
+
+# Private files and database backups
+private/
+playwright-report/
+test-results/
+.tmp-edge-cdp-2/
+*.log
+# Editor and operating-system files
+.DS_Store
+Thumbs.db
+*.swp
+
+# Unused branding reference materials
+/public/Logo_Review_Sheet.png
+/public/README.txt
+/public/Website_Integration_Example.txt
+/public/Web_App/manifest.example.json
+uploads/
+
+*.dump
+
+*.backup
+
+*.sql.gz
+
+.p2-e2e/
+
+.p22-e2e/
+
+.p22-final-e2e/

@@ -12,7 +12,7 @@ export const userNavigation = [
 ] as const;
 
 const adminNavigation = [
-  ["Operations", "/admin/operations"], ["Verifications", "/admin/verifications"],
+  ["Operations", "/admin/operations"], ["Bug reports", "/admin/bug-reports"], ["Verifications", "/admin/verifications"],
   ["Geography", "/admin/geography"], ["Orientation Camps", "/admin/orientation-camps"],
   ["Journey Guides", "/admin/journey-guides"], ["Safety", "/admin/safety"], ["Back to app", "/app"],
 ] as const;

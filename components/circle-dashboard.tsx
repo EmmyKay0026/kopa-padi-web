@@ -1,4 +1,7 @@
 "use client";
+import { GlyphIcon } from "@/components/glyph-icon";
+import { BrandLogo } from "@/components/brand-logo";
+
 import { AppIcon, type AppIconName } from "./app-icon";
 
 import { api } from "@/lib/api";
@@ -29,7 +32,9 @@ type Meetup = {
   proposedByUserId: string | null;
   confirmations: Array<{ userId: string }>;
 } | null;
+type LockApproval = { snapshot: string; approvals: number; required: number; members: number; approved: boolean; locked: boolean; canApprove: boolean; reset: boolean };
 type CircleData = {
+  lockApproval?: LockApproval;
   circle: {
     id: string;
     status: string;
@@ -139,18 +144,7 @@ function Avatar({
     </span>
   );
 }
-function Brand() {
-  return (
-    <Link href="/" className="circle-brand" aria-label="Kopa-Padi home">
-      <span className="circle-brand-mark">
-        <Icon name="people" size={23} />
-      </span>
-      <span>
-        <b>Kopa-Padi</b>
-        <small>Travel together. Go further.</small>
-      </span>
-    </Link>
-  );
+function Brand() { return <BrandLogo href="/app" />;
 }
 
 function AppSidebar({ unreadCount }: { unreadCount: number }) {
@@ -188,7 +182,7 @@ function MobileTopBar() {
   return (
     <header className="circle-mobile-topbar">
       <Link href="/travel-plans" aria-label="Back to my trips">
-        ←
+        <GlyphIcon name="←" />
       </Link>
       <b>Travel Circle</b>
       <div className="flex items-center gap-2">
@@ -205,7 +199,7 @@ function PageHeader() {
   return (
     <header className="circle-page-header circle-enter">
       <Link href="/travel-plans" className="circle-back-link">
-        ← <span>Back to My Trips</span>
+        <GlyphIcon name="←" /> <span>Back to My Trips</span>
       </Link>
       <div>
         <h1>Your Travel Circle</h1>
@@ -451,7 +445,7 @@ function ChatMessage({
             {message.deletedAt ? null : (
               <>
                 <span>Delivered</span>
-                <span aria-hidden="true">✓✓</span>
+                <span aria-hidden="true"><GlyphIcon name="✓" /><GlyphIcon name="✓" /></span>
                 <button type="button" onClick={onDelete}>
                   Delete
                 </button>
@@ -761,6 +755,19 @@ function MeetupCard(props: {
           >
             {isConfirmed ? "Meetup confirmed" : "Confirm Meetup"}
           </button>
+          {meetup.status === "AGREED" && data.membership.membershipStatus === "CONFIRMED" ? (
+            <div className="mt-4 grid gap-2">
+              <Link href="/journey" className="circle-primary-button full">
+                Continue to Journey <Icon name="arrow" size={18} />
+              </Link>
+              <p className="text-sm text-muted">
+                Prepare your journey and create private share links for family or other trusted contacts.
+                {!["LOCKED", "IN_JOURNEY"].includes(data.circle.status)
+                  ? " You can prepare now; starting your Circle journey becomes available after the Circle is locked."
+                  : " Start your journey on the next page when you are ready to depart."}
+              </p>
+            </div>
+          ) : null}
           {meetup.proposedByUserId === data.membership.userId &&
           meetup.status === "PROPOSED" ? (
             <button
@@ -1103,6 +1110,7 @@ export function CircleDashboard() {
 
   const refreshCircle = useCallback(async () => {
     const current = await api<CircleData | null>("/travel-circles/current");
+    if (current) current.lockApproval = await api<LockApproval>("/travel-circles/current/lock");
     setData(current);
     return current;
   }, []);
@@ -1352,6 +1360,32 @@ export function CircleDashboard() {
               )
             }
           />
+          {data.lockApproval ? <section className="circle-side-card mb-5" aria-labelledby="permanent-lock-title">
+            <h2 id="permanent-lock-title" className="flex items-center gap-2 font-bold"><Icon name="lock" />{data.lockApproval.locked ? "Circle permanently locked" : "Lock your Circle together"}</h2>
+            {data.lockApproval.locked ? <>
+              <p className="my-3 text-sm text-muted">This Circle cannot be unlocked and new members cannot join. The agreed departure schedule is unchanged. Each member starts their own journey when ready.</p>
+              <Link href="/journey" className="circle-primary-button">Continue to Journey <Icon name="arrow" size={16} /></Link>
+            </> : <>
+              <p className="my-3 text-sm text-muted">{data.lockApproval.approvals} of {data.lockApproval.required} required approvals ({data.lockApproval.members} current members). Automatic locking still applies two hours before departure unless configured otherwise.</p>
+              <p className="mb-3 text-sm text-muted">Locking is permanent: no new members can join and the Circle cannot be unlocked. It does not change your departure schedule or start anyone's journey. Requests and approval changes are recorded in the Circle chat.</p>
+              {data.lockApproval.reset ? <p role="status" className="mb-3 text-sm font-bold">Membership or departure details changed. Earlier approvals no longer count. Review the current plan before approving again.</p> : null}
+              <button type="button" disabled={busy || !data.lockApproval.canApprove} className="circle-primary-button" onClick={() => {
+                const approval = data.lockApproval!;
+                setConfirmState({
+                  title: approval.approved ? "Withdraw your lock approval?" : "Approve a permanent lock?",
+                  copy: approval.approved
+                    ? "Your approval will stop counting if the Circle has not locked yet. Other members will see the withdrawal in chat. Once the Circle locks, approvals cannot be withdrawn and it cannot be unlocked."
+                    : `At least ${approval.required} current members must approve. Reaching that number permanently closes the Circle to new members. Nobody can unlock it. Your departure schedule stays unchanged and each person must start their own journey. Your approval and this warning will appear in Circle chat.`,
+                  actionLabel: approval.approved ? "Withdraw approval" : "Approve permanent lock",
+                  run: async () => {
+                    const done = await act(() => api('/travel-circles/current/lock/approval', { method: 'POST', body: JSON.stringify({ snapshot: approval.snapshot, approve: !approval.approved }) }), approval.approved ? 'Lock approval withdrawn.' : 'Permanent lock approval recorded.');
+                    setConfirmState(null);
+                    if (!done) await refreshCircle().catch(() => undefined);
+                  },
+                });
+              }}>{data.lockApproval.approved ? "Withdraw lock approval" : "Approve permanent lock"}</button>
+            </>}
+          </section> : null}
           <NotificationList
             notifications={data.notifications}
             busy={busy}

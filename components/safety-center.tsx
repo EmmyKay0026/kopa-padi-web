@@ -1,4 +1,7 @@
 "use client";
+import { GlyphIcon } from "@/components/glyph-icon";
+import { BrandLogo } from "@/components/brand-logo";
+
 import { AppIcon, type AppIconName } from "./app-icon";
 
 import Link from "next/link";
@@ -102,20 +105,7 @@ const nav: [IconName, string, string][] = [
   ["shield", "Safety Centre", "/safety"],
   ["profile", "Profile", "/profile"],
 ];
-function Brand() {
-  return (
-    <Link href="/app" className="flex items-center gap-2.5 text-foreground">
-      <span className="grid h-10 w-10 place-items-center rounded-xl bg-primary text-xs font-black text-white">
-        KP
-      </span>
-      <span>
-        <b className="block text-[15px] leading-none">Kopa-Padi</b>
-        <small className="mt-1 block text-[8px] text-muted">
-          Travel together. Go further.
-        </small>
-      </span>
-    </Link>
-  );
+function Brand() { return <BrandLogo href="/app" />;
 }
 function Shell({
   children,
