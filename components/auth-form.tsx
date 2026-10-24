@@ -309,8 +309,7 @@ export function SignUpForm({ onModeChange, destination }: Props) {
             aria-describedby={errors.terms ? "terms-error" : undefined}
           />
           <span>
-            I agree to the <Link href="/#footer">Terms of Service</Link> and{" "}
-            <Link href="/#footer">Privacy Policy</Link>
+            I agree to the <Link href="/terms">Terms and Conditions</Link>
           </span>
         </label>
         <FieldError field="terms" errors={errors} />
