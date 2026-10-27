@@ -28,12 +28,12 @@ export default defineConfig(({ isPreview }) => ({
               process.env.STAGING_API_URL,
               process.env.NEXT_PUBLIC_API_URL,
             )
-          : "https://api.kopa-padi.corper-paddy.com.ng",
+          : "https://api.kopa-padi.com.ng",
       ),
 
       NEXT_PUBLIC_CIRCLE_POLL_INTERVAL_MS: bindings.text("5000"),
 
-      NEXT_PUBLIC_GOOGLE_AUTH_ENABLED: bindings.text("false"),
+      NEXT_PUBLIC_GOOGLE_AUTH_ENABLED: bindings.text("true"),
     },
 
     observability: {
