@@ -11,10 +11,11 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useLayoutEffect, useRef, useState } from "react";
+import { stateGuideHref } from "@/lib/state-guide-links";
 
 const featuredRoutes: Record<string, string[]> = {
   lagos: ["Ibadan", "Abeokuta", "Benin City"],
-  "federal-capital-territory": ["Kaduna", "Lokoja", "Jos"],
+  fct: ["Kaduna", "Lokoja", "Jos"],
   rivers: ["Owerri", "Uyo", "Yenagoa"],
   oyo: ["Lagos", "Ilorin", "Abeokuta"],
   kano: ["Kaduna", "Katsina", "Bauchi"],
@@ -24,7 +25,7 @@ const featuredRoutes: Record<string, string[]> = {
 };
 
 const shortLabels: Record<string, string> = {
-  "federal-capital-territory": "FCT",
+  fct: "FCT",
   "akwa-ibom": "Akwa Ibom",
   "cross-river": "Cross River",
 };
@@ -100,7 +101,7 @@ export default function NigeriaTripMap() {
               >
                 <title id="nigeria-map-title">Interactive map of Nigeria</title>
                 <desc id="nigeria-map-description">
-                  Select a state to explore travel options with Kopa-Padi.
+                  Select a state to explore its NYSC guide and travel options with Kopa-Padi.
                 </desc>
                 <g>
                   {mapLocations.map((location) => {
@@ -209,10 +210,10 @@ export default function NigeriaTripMap() {
                       View on map <ExternalLink size={15} />
                     </Link>
                     <Link
-                      href={stateHref("/locations", selected.name)}
+                      href={stateGuideHref(selected.id)}
                       className="inline-flex min-h-11 items-center justify-center rounded-xl border border-primary/25 bg-white px-4 text-sm font-bold text-primary transition hover:bg-primary-light"
                     >
-                      Choose state
+                      View state
                     </Link>
                     <Link
                       href={stateHref("/travel-plans", selected.name)}
@@ -237,8 +238,9 @@ export default function NigeriaTripMap() {
               Find a Padi, wherever the road takes you.
             </h2>
             <p className="mt-6 text-lg leading-8 text-muted">
-              Tap any state to discover travel possibilities, choose your
-              departure area and start planning a safer shared journey.
+              Tap any state to discover its NYSC camp, local government areas
+              and a little of what to expect. Then start planning your shared
+              journey.
             </p>
             <div className="mt-8 grid gap-3 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
               {[

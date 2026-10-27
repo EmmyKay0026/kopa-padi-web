@@ -44,6 +44,8 @@ const pct = (a: number | string, b: number | string) => {
   return d ? Math.round((num(a) / d) * 100) : 0;
 };
 const navigation = [
+  "State guides",
+  "NYSC intakes",
   "Dashboard",
   "Users",
   "Verifications",
@@ -67,7 +69,7 @@ function Shell({ children }: { children: React.ReactNode }) {
           {navigation.map((label) => (
             <Link
               key={label}
-              href={label === "Operations" ? "/admin/operations" : label === "Bug reports" ? "/admin/bug-reports" : "#"}
+              href={label === "State guides" ? "/admin/state-guides" : label === "NYSC intakes" ? "/admin/intakes" : label === "Operations" ? "/admin/operations" : label === "Bug reports" ? "/admin/bug-reports" : "#"}
               aria-current={label === "Operations" ? "page" : undefined}
               className={`flex min-h-10 items-center rounded-xl px-3 text-xs font-bold ${label === "Operations" ? "bg-primary/10 text-primary" : "text-muted hover:bg-background hover:text-foreground"}`}
             >
@@ -326,6 +328,7 @@ export function OperationsDashboard() {
               Capability-protected health, backlog, notification, and safety
               indicators.
             </p>
+            <Link href="/admin/intakes" className="mt-3 inline-flex min-h-11 items-center text-sm font-bold text-primary hover:underline">Manage active NYSC intake →</Link>
           </div>
           <div className="flex flex-col items-stretch gap-2 text-[10px] sm:items-end">
             <p className="text-muted">

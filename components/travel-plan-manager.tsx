@@ -2,10 +2,17 @@
 import { GlyphIcon } from "@/components/glyph-icon";
 
 import { api } from "@/lib/api";
+import { intakeLabel, type NyscIntake } from "@/lib/active-intake";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { resolveDepartureContext } from "@/lib/departure-context";
+import { resolveDepartureContext, resolveDestinationCamp, resolveTravelSchedule } from "@/lib/departure-context";
+import {
+  DEPARTURE_WINDOWS,
+  DEPARTURE_WINDOW_OPTIONS as windows,
+  TRANSPORT_MODES,
+  TRANSPORT_MODE_OPTIONS as transports,
+} from "@/lib/travel-plan-options";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
@@ -29,20 +36,8 @@ const schema = z.object({
     .min(10, "Choose a valid travel date.")
     .refine((value) => value >= today(), "Travel date must be today or later."),
   dateFlexibilityDays: z.number().int().min(0).max(2),
-  departureWindow: z.enum([
-    "EARLY_MORNING",
-    "MORNING",
-    "LATE_MORNING",
-    "AFTERNOON",
-    "FLEXIBLE",
-  ]),
-  transportMode: z.enum([
-    "COMMERCIAL_BUS",
-    "TRAIN",
-    "FLIGHT",
-    "PRIVATE_VEHICLE",
-    "UNDECIDED",
-  ]),
+  departureWindow: z.enum(DEPARTURE_WINDOWS),
+  transportMode: z.enum(TRANSPORT_MODES),
   transportFlexible: z.boolean(),
   nearbyMatchingEnabled: z.boolean(),
   groupPreference: z.literal("ANY_VERIFIED_PCM"),
@@ -75,6 +70,7 @@ type Plan = {
 };
 type Verification = {
   verification: { status: string };
+  intake?: { id: string; serviceYear: string; batch: string; stream: string };
   camp?: { id: string; campName: string; stateName: string };
 };
 const defaults: Values = {
@@ -97,20 +93,6 @@ const mobileNav: Array<[AppIconName, string, string]> = [
   ["match", "Matches", "/matching"],
   ["people", "Travel Circle", "/circle"],
   ["profile", "Profile", "/profile"],
-];
-const windows: Array<[Values["departureWindow"], string, string]> = [
-  ["EARLY_MORNING", "Early Morning", "4 AM – 7 AM"],
-  ["MORNING", "Morning", "7 AM – 10 AM"],
-  ["LATE_MORNING", "Late Morning", "10 AM – 12 PM"],
-  ["AFTERNOON", "Afternoon", "12 PM – 4 PM"],
-  ["FLEXIBLE", "Flexible", ""],
-];
-const transports: Array<[Values["transportMode"], string, AppIconName]> = [
-  ["COMMERCIAL_BUS", "Commercial Bus", "bus"],
-  ["TRAIN", "Train", "train"],
-  ["FLIGHT", "Flight", "plane"],
-  ["PRIVATE_VEHICLE", "Private Vehicle", "car"],
-  ["UNDECIDED", "Not Decided Yet", "clock"],
 ];
 const pretty = (v: string) =>
   v
@@ -378,6 +360,7 @@ function CancelDialog({
 }
 
 export function TravelPlanManager() {
+  const [activeIntake, setActiveIntake] = useState<NyscIntake | null>(null);
   const search = useSearchParams().toString();
   const [states, setStates] = useState<Place[]>([]),
     [camps, setCamps] = useState<CampRow[]>([]),
@@ -420,15 +403,17 @@ export function TravelPlanManager() {
     setLoadFailed(false);
     setError("");
     try {
-      const [s, v, c] = await Promise.all([
+      const [s, v, c, intake] = await Promise.all([
         api<Place[]>("/locations/states"),
         api<Verification>("/verification/status"),
         api<CampRow[]>("/orientation-camps"),
+        api<NyscIntake | null>("/intakes/active"),
       ]);
       if (request !== loadRequest.current) return;
       setStates(s);
       setCamps(c);
       setVerification(v);
+      setActiveIntake(intake);
       if (v.verification.status !== "VERIFIED") {
         setPlan(null);
         return;
@@ -438,9 +423,10 @@ export function TravelPlanManager() {
       setPlan(p);
       if (p) reset({ ...p.plan, originTownId: p.plan.originTownId ?? "" });
       else {
+        const params = new URLSearchParams(search);
         let initialLgas: Place[] = [], initialTowns: Place[] = [];
         const departure = await resolveDepartureContext(
-          new URLSearchParams(search), s,
+          params, s,
           async (id) => (initialLgas = await api<Place[]>(`/locations/states/${encodeURIComponent(id)}/lgas`)),
           async (id) => (initialTowns = await api<Place[]>(`/locations/lgas/${encodeURIComponent(id)}/towns`)),
         );
@@ -448,7 +434,12 @@ export function TravelPlanManager() {
         // Native selects must have the validated options before RHF registers them.
         setLgas(initialLgas);
         setTowns(initialTowns);
-        reset({ ...defaults, ...departure, destinationCampId: c.some(({ camp }) => camp.id === v.camp?.id) ? v.camp!.id : "" });
+        reset({
+          ...defaults,
+          ...departure,
+          ...resolveTravelSchedule(params, today(), { departureWindows: DEPARTURE_WINDOWS, transportModes: TRANSPORT_MODES }),
+          destinationCampId: resolveDestinationCamp(params, c.map(({ camp }) => camp), v.camp?.id),
+        });
       }
     } catch {
       if (request !== loadRequest.current) return;
@@ -534,10 +525,10 @@ export function TravelPlanManager() {
       );
       setPlan(result);
       setEditing(false);
-    } catch {
-      setError(
-        "We couldn't save your Travel Plan right now. Please try again.",
-      );
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "We couldn't save your Travel Plan right now. Please try again.";
+      if (message === "No NYSC batch and stream are currently open for new trips." || message === "Your verified NYSC intake is not open for new trips.") await load();
+      setError(message);
     }
   }
   async function cancel() {
@@ -552,6 +543,7 @@ export function TravelPlanManager() {
       reset(defaults);
       setStep(1);
       setCancelOpen(false);
+      await load();
     } catch {
       setError(
         "We couldn't cancel your Travel Plan right now. Please try again.",
@@ -573,6 +565,13 @@ export function TravelPlanManager() {
         <VerificationRequired />
       </Shell>
     );
+  if (!plan && (!activeIntake || verification.intake?.id !== activeIntake.id)) {
+    return <Shell><Header /><main className="mx-auto max-w-xl px-5 py-10"><section className="rounded-2xl border bg-white p-7 shadow-soft">
+      <h2 className="text-xl font-black">{activeIntake ? "Your intake is not open for new trips" : "Trip planning is currently closed"}</h2>
+      <p className="mt-4 text-sm leading-7 text-muted">{activeIntake ? `New trips are open for ${intakeLabel(activeIntake)}. Your verification is assigned to a different intake.` : "No NYSC batch and stream are currently open. Please check back when an intake is activated."}</p>
+      <Link href="/verification" className="btn-primary mt-6">View verification</Link>
+    </section></main></Shell>;
+  }
   const camp = plan && !editing ? plan.destination : camps.find(({ camp: item }) => item.id === destinationCampId)?.camp;
   if (plan && !editing)
     return (
@@ -675,6 +674,7 @@ export function TravelPlanManager() {
     <Shell>
       <Header step={step} />
       <main className="mx-auto max-w-3xl px-5 pb-32">
+        {!plan && activeIntake ? <p className="mt-5 rounded-xl border border-primary/20 bg-primary-light/25 p-4 text-sm font-bold text-primary-dark">Active NYSC intake: {intakeLabel(activeIntake)}</p> : null}
         <form
           onSubmit={handleSubmit(save)}
           className="mt-4 rounded-2xl border border-border bg-surface p-5 shadow-soft"
@@ -826,6 +826,7 @@ export function TravelPlanManager() {
                         key={v}
                         type="button"
                         onClick={() => setValue("departureWindow", v)}
+                        aria-pressed={windowValue === v}
                         className={`min-h-16 rounded-xl border p-2 text-xs font-bold ${windowValue === v ? "border-primary bg-primary-light/40 text-primary-dark" : "border-border"}`}
                       >
                         {l}
@@ -849,6 +850,7 @@ export function TravelPlanManager() {
                       key={v}
                       type="button"
                       onClick={() => setValue("transportMode", v)}
+                      aria-pressed={transport === v}
                       className={`min-h-20 rounded-xl border p-2 text-[10px] font-bold ${transport === v ? "border-primary bg-primary-light/40 text-primary-dark" : "border-border"}`}
                     >
                       <AppIcon name={i} size={22} className="mx-auto mb-2" />

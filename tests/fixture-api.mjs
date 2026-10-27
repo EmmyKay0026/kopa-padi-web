@@ -6,6 +6,7 @@ import { createServer } from 'node:http';
 let mode = 'verified';
 const campId = '11111111-1111-4111-8111-111111111111';
 const otherCampId = '22222222-2222-4222-8222-222222222222';
+const intake = { id: '44444444-4444-4444-8444-444444444444', serviceYear: '2026', batch: 'Batch B', stream: 'Stream 1', status: 'ACTIVE', orientationStartDate: null, orientationEndDate: null };
 const states = [{ id: 'NG-LAGOS', name: 'Lagos' }, { id: 'NG-FCT', name: 'Federal Capital Territory' }];
 const camps = [
   { camp: { id: campId, campName: 'Fixture Active Camp', stateName: 'Federal Capital Territory', officialAddress: 'Fixture official address', status: 'ACTIVE' } },
@@ -40,7 +41,8 @@ createServer((req, res) => {
   else if (url.pathname === '/api/locations/lgas/LAGOS-LGA/towns') body = [{ id: '33333333-3333-4333-8333-333333333333', name: 'Fixture Lagos Town' }];
   else if (url.pathname === '/api/locations/lgas/FCT-LGA/towns') body = [];
   else if (url.pathname === '/api/orientation-camps') body = camps;
-  else if (url.pathname === '/api/verification/status') body = { verification: { status: mode === 'unverified' ? 'UNVERIFIED' : 'VERIFIED' }, camp: camps[0].camp };
+  else if (url.pathname === '/api/intakes/active') body = intake;
+  else if (url.pathname === '/api/verification/status') body = { verification: { status: mode === 'unverified' ? 'UNVERIFIED' : 'VERIFIED' }, intake, camp: camps[0].camp };
   else if (url.pathname === '/api/travel-plans/active') body = mode === 'active' ? plan : null;
   else if (url.pathname === '/api/matching/status') body = { status: 'SEARCHING', circle: null, alternativeOfferAvailable: false };
   else if (url.pathname === '/api/travel-circles/current') body = null;

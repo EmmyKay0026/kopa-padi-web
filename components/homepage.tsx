@@ -1,11 +1,15 @@
 "use client";
 import { GlyphIcon } from "@/components/glyph-icon";
 import { BrandLogo } from "@/components/brand-logo";
-
-
+import { NIGERIAN_STATES } from "@/lib/nigerian-states";
+import {
+  DEPARTURE_WINDOW_OPTIONS,
+  TRANSPORT_MODE_OPTIONS,
+} from "@/lib/travel-plan-options";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import NigeriaTripMap from "./nigeria-trip-map";
+import HowItWorksScroll from "./how-it-works-scroll";
 
 const Icon = ({
   children,
@@ -39,7 +43,8 @@ const nav = [
   ["FAQs", "#faq-list"],
 ];
 
-function Logo({ light = false }: { light?: boolean }) { return <BrandLogo light={light} />;
+function Logo({ light = false }: { light?: boolean }) {
+  return <BrandLogo light={light} />;
 }
 
 function Header() {
@@ -54,7 +59,9 @@ function Header() {
   return (
     <header
       className={`fixed inset-x-0 top-0 z-50 border-b transition-all ${scrolled || open ? "border-border bg-white/95 text-foreground shadow-sm backdrop-blur-xl" : "border-transparent bg-transparent text-white"}`}
-      onKeyDown={(event) => { if (event.key === "Escape") setOpen(false); }}
+      onKeyDown={(event) => {
+        if (event.key === "Escape") setOpen(false);
+      }}
     >
       <nav
         aria-label="Main navigation"
@@ -88,7 +95,15 @@ function Header() {
           onClick={() => setOpen(!open)}
           className="grid h-11 w-11 place-items-center rounded-xl border border-current/20 text-xl lg:hidden"
         >
-          {open ? <><GlyphIcon name="×" /></> : <><GlyphIcon name="☰" /></>}
+          {open ? (
+            <>
+              <GlyphIcon name="×" />
+            </>
+          ) : (
+            <>
+              <GlyphIcon name="☰" />
+            </>
+          )}
         </button>
       </nav>
       {open && (
@@ -123,11 +138,33 @@ function Header() {
   );
 }
 
+function StateSelect({
+  name,
+  placeholder,
+}: {
+  name: string;
+  placeholder: string;
+}) {
+  return (
+    <select name={name} className="field min-w-0" defaultValue="" required>
+      <option value="" disabled>
+        {placeholder}
+      </option>
+      {NIGERIAN_STATES.map((state) => (
+        <option key={state} value={state}>
+          {state === "Federal Capital Territory" ? "FCT (Abuja)" : state}
+        </option>
+      ))}
+    </select>
+  );
+}
+
 function TripForm({ compact = false }: { compact?: boolean }) {
   return (
     <form
       action="/travel-plans"
       method="get"
+      aria-label={compact ? "Quick trip planner" : "Plan your trip"}
       className={compact ? "grid gap-3 md:grid-cols-[1fr_1fr_auto]" : ""}
     >
       {!compact && (
@@ -138,56 +175,59 @@ function TripForm({ compact = false }: { compact?: boolean }) {
           </p>
         </>
       )}
-      <div className={compact ? "" : "mt-6 grid gap-4 sm:grid-cols-2"}>
-        <label className="grid gap-2 text-sm font-bold">
+      <div className={compact ? "contents" : "mt-6 grid gap-4 sm:grid-cols-2"}>
+        <label className="grid min-w-0 gap-2 text-sm font-bold">
           From
-          <input
-            className="field"
-            placeholder="Departure city"
-            required
-          />
+          <StateSelect name="state" placeholder="Departure state" />
         </label>
-        {!compact && (
-          <label className="grid gap-2 text-sm font-bold">
-            To
-            <input
-              className="field"
-              placeholder="Destination"
-              required
-            />
-          </label>
-        )}
-      </div>
-      {compact && (
-        <label className="grid gap-2 text-sm font-bold text-white">
+        <label className="grid min-w-0 gap-2 text-sm font-bold">
           To
-          <input
-            className="field"
-            placeholder="Destination"
-            required
+          <StateSelect
+            name="destinationState"
+            placeholder="Destination state"
           />
         </label>
-      )}
+      </div>
       {!compact && (
         <>
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             <label className="grid gap-2 text-sm font-bold">
               Date
-              <input className="field" type="date" required />
+              <input
+                className="field"
+                type="date"
+                name="intendedTravelDate"
+                required
+              />
             </label>
             <label className="grid gap-2 text-sm font-bold">
-              Time
-              <input className="field" type="time" name="time" required />
+              Departure window
+              <select
+                className="field"
+                name="departureWindow"
+                defaultValue="FLEXIBLE"
+                required
+              >
+                {DEPARTURE_WINDOW_OPTIONS.map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+              </select>
             </label>
           </div>
           <label className="mt-4 grid gap-2 text-sm font-bold">
             Transport mode
-            <select className="field">
-              <option>Car</option>
-              <option>Bus</option>
-              <option>Train</option>
-              <option>Flight</option>
-              <option>Other</option>
+            <select
+              className="field"
+              name="transportMode"
+              defaultValue="COMMERCIAL_BUS"
+            >
+              {TRANSPORT_MODE_OPTIONS.map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
             </select>
           </label>
         </>
@@ -201,8 +241,15 @@ function TripForm({ compact = false }: { compact?: boolean }) {
       >
         Open Travel Plan <Arrow />
       </button>
-      <p className={compact ? "text-xs text-white/75 md:col-span-3" : "mt-3 text-center text-xs text-muted"}>
-        Sign in and verify your PCM status to create a Travel Plan. This preview does not save your entries; enter your route and schedule in the Travel Plan form.
+      <p
+        className={
+          compact
+            ? "text-xs text-white/75 md:col-span-3"
+            : "mt-3 text-center text-xs text-muted"
+        }
+      >
+        Sign in and verify your PCM status to create a Travel Plan. Review your
+        selections in the Travel Plan form before saving.
       </p>
     </form>
   );
@@ -290,8 +337,7 @@ const steps = [
     ],
     cta: "Create a Trip",
     href: "/travel-plans",
-    image:
-      "/1b349eb7-56c3-4152-bb64-d7c5697bd1be.webp",
+    image: "/1b349eb7-56c3-4152-bb64-d7c5697bd1be.webp",
   },
   {
     title: "Get Matched",
@@ -306,8 +352,7 @@ const steps = [
     ],
     cta: "See How Matching Works",
     href: "/matching",
-    image:
-      "/Lagos Travelers Among Yellow Danfos.webp",
+    image: "/Lagos Travelers Among Yellow Danfos.webp",
   },
   {
     title: "Connect Safely",
@@ -322,8 +367,7 @@ const steps = [
     ],
     cta: "Learn About Safety",
     href: "#safety",
-    image:
-      "/Joyful Ride Through Lagos Traffic.webp",
+    image: "/Joyful Ride Through Lagos Traffic.webp",
   },
   {
     title: "Travel Together",
@@ -338,8 +382,7 @@ const steps = [
     ],
     cta: "Start Your Trip",
     href: "/register",
-    image:
-      "/Highway to the Granite Monolith.webp",
+    image: "/Highway to the Granite Monolith.webp",
   },
 ];
 function HowItWorks() {
@@ -420,13 +463,21 @@ const why = [
     "Verified Travelers",
     "Know more about the person you're connecting with.",
   ],
-  ["route", "Smarter Matches", "Match based on route, time and travel preferences."],
+  [
+    "route",
+    "Smarter Matches",
+    "Match based on route, time and travel preferences.",
+  ],
   [
     "chat",
     "Connect Before Travel",
     "Chat before deciding if someone is the right Padi.",
   ],
-  ["shield", "Safety First", "Access tools designed to make shared journeys safer."],
+  [
+    "shield",
+    "Safety First",
+    "Access tools designed to make shared journeys safer.",
+  ],
 ];
 function Why() {
   return (
@@ -495,7 +546,9 @@ function Matching() {
             <span className="mx-4 h-px flex-1 bg-primary"></span>
             <span>Ibadan</span>
           </div>
-          <p className="mt-2 text-sm text-muted">7:30 AM <GlyphIcon name="car" /> Car</p>
+          <p className="mt-2 text-sm text-muted">
+            7:30 AM <GlyphIcon name="car" /> Car
+          </p>
           <div className="my-5 flex items-center gap-3">
             <span className="h-px flex-1 bg-border" />
             <span className="rounded-full bg-primary px-4 py-2 text-xs font-black text-white">
@@ -508,7 +561,9 @@ function Matching() {
             <span className="mx-4 h-px flex-1 bg-primary"></span>
             <span>Ibadan</span>
           </div>
-          <p className="mt-2 text-sm text-muted">7:45 AM <GlyphIcon name="car" /> Car</p>
+          <p className="mt-2 text-sm text-muted">
+            7:45 AM <GlyphIcon name="car" /> Car
+          </p>
           <div className="mt-5 rounded-xl bg-primary-light p-3 text-center font-black text-primary-dark">
             94% demo match
           </div>
@@ -568,12 +623,20 @@ function Safety() {
           </h3>
           <div className="mt-6 rounded-2xl bg-primary-light p-4">
             <p className="text-xs font-bold text-muted">TRIP STATUS</p>
-            <p className="mt-1 font-black text-primary-dark"><GlyphIcon name="✓" /> On track</p>
+            <p className="mt-1 font-black text-primary-dark">
+              <GlyphIcon name="✓" /> On track
+            </p>
           </div>
-          <Link href="/journey" className="mt-6 block w-full rounded-xl border p-3 text-center font-bold">
+          <Link
+            href="/journey"
+            className="mt-6 block w-full rounded-xl border p-3 text-center font-bold"
+          >
             Open Journey Sharing
           </Link>
-          <Link href="/journey#emergency" className="mt-3 block w-full rounded-xl bg-danger p-3 text-center font-black text-white">
+          <Link
+            href="/journey#emergency"
+            className="mt-3 block w-full rounded-xl bg-danger p-3 text-center font-black text-white"
+          >
             Open Emergency Tools
           </Link>
         </div>
@@ -765,12 +828,12 @@ function FAQ() {
           <p className="mt-4 text-muted">
             Find answers to common questions about Kopa-Padi.
           </p>
-          <a
+          {/* <a
             href="#faq-list"
             className="group mt-6 inline-flex font-bold text-primary"
           >
             View all FAQs <Arrow />
-          </a>
+          </a> */}
         </div>
         <div id="faq-list">
           {faqs.map(([q, a], i) => (
@@ -831,13 +894,32 @@ function FinalCTA() {
 
 function Footer() {
   const groups = {
-    Product: [["How It Works", "/#how-it-works"], ["Matching Status", "/matching"], ["Travel Plan", "/travel-plans"], ["Journey Safety", "/journey"]],
-    Discover: [["About Kopa-Padi", "/#why"], ["Travel Tips", "/#blog"], ["Explore Nigeria", "/#explore-nigeria"]],
-    Support: [["Terms and Conditions", "/terms"], ["FAQs", "/#faq-list"], ["Safety Centre", "/safety"], ["Report a Concern", "/safety"]],
-    Account: [["Profile", "/profile"], ["Verification", "/verification"], ["Log In", "/login"], ["Sign Up", "/register"]],
+    Product: [
+      ["How It Works", "/#how-it-works"],
+      ["Matching Status", "/matching"],
+      ["Travel Plan", "/travel-plans"],
+      ["Journey Safety", "/journey"],
+    ],
+    Discover: [
+      ["About Kopa-Padi", "/#why"],
+      ["Travel Tips", "/#blog"],
+      ["Explore Nigeria", "/#explore-nigeria"],
+    ],
+    Support: [
+      ["Terms and Conditions", "/terms"],
+      ["FAQs", "/#faq-list"],
+      ["Safety Centre", "/safety"],
+      ["Report a Concern", "/safety"],
+    ],
+    Account: [
+      ["Profile", "/profile"],
+      ["Verification", "/verification"],
+      ["Log In", "/login"],
+      ["Sign Up", "/register"],
+    ],
   };
   return (
-    <footer id="footer" className="bg-[#0b211f] py-16 text-white">
+    <footer id="footer" className="bg-[#0b211f] pt-16 text-white">
       <div className="container-page grid gap-10 md:grid-cols-2 lg:grid-cols-5">
         <div>
           <Logo light />
@@ -863,17 +945,21 @@ function Footer() {
       <div className="container-page mt-12 border-t border-white/10 pt-6 text-xs text-white/50">
         © {new Date().getFullYear()} Kopa-Padi. All rights reserved.
       </div>
+      <div className="w-full flex justify-center items-center mt-5 mb-0">
+        <h2 className="text-[10rem] text-white/60 leading-0  ">kopa-padi</h2>
+      </div>
     </footer>
   );
 }
 
 export default function Homepage() {
   return (
-    <main className="overflow-hidden">
+    <main className="overflow-x-clip">
       <Hero />
       <TrustStrip />
       <NigeriaTripMap />
-      <HowItWorks />
+      {/* <HowItWorks /> */}
+      <HowItWorksScroll />
       <Why />
       <Matching />
       <Safety />

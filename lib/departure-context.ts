@@ -63,3 +63,40 @@ export function departurePlanHref(selection: DepartureSelection) {
   if (selection.originTownId) params.set("originTownId", selection.originTownId);
   return `/travel-plans?${params}`;
 }
+
+/** A state choice selects a camp only when the API offers an unambiguous match. */
+export function resolveDestinationCamp(
+  params: URLSearchParams,
+  camps: { id: string; stateName: string }[],
+  preferredCampId?: string,
+) {
+  if (!params.has("destinationState")) {
+    return camps.find((camp) => camp.id === preferredCampId)?.id ?? "";
+  }
+  const state = normalizedState(singleValue(params, "destinationState"));
+  if (!state) return "";
+  const matches = camps.filter((camp) => normalizedState(camp.stateName) === state);
+  const preferred = matches.find((camp) => camp.id === preferredCampId);
+  return preferred?.id ?? (matches.length === 1 ? matches[0].id : "");
+}
+
+/** URL selections are hints for a new plan; invalid or repeated values never become form defaults. */
+export function resolveTravelSchedule<Window extends string, Mode extends string>(
+  params: URLSearchParams,
+  today: string,
+  options: { departureWindows: readonly Window[]; transportModes: readonly Mode[] },
+) {
+  const selection: Partial<{ intendedTravelDate: string; departureWindow: Window; transportMode: Mode }> = {};
+  const date = singleValue(params, "intendedTravelDate");
+  if (/^\d{4}-\d{2}-\d{2}$/.test(date) && date >= today) {
+    const parsed = new Date(`${date}T00:00:00Z`);
+    if (!Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === date) {
+      selection.intendedTravelDate = date;
+    }
+  }
+  const window = options.departureWindows.find((value) => value === singleValue(params, "departureWindow"));
+  const mode = options.transportModes.find((value) => value === singleValue(params, "transportMode"));
+  if (window) selection.departureWindow = window;
+  if (mode) selection.transportMode = mode;
+  return selection;
+}
