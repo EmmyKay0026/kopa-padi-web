@@ -1,0 +1,190 @@
+{
+  "note": "Routing index only. State names, LGAs, and operational camps are read from the geography API at runtime.",
+  "states": [
+    {
+      "stateId": "NG001",
+      "slug": "abia",
+      "name": "Abia"
+    },
+    {
+      "stateId": "NG002",
+      "slug": "adamawa",
+      "name": "Adamawa"
+    },
+    {
+      "stateId": "NG003",
+      "slug": "akwa-ibom",
+      "name": "Akwa Ibom"
+    },
+    {
+      "stateId": "NG004",
+      "slug": "anambra",
+      "name": "Anambra"
+    },
+    {
+      "stateId": "NG005",
+      "slug": "bauchi",
+      "name": "Bauchi"
+    },
+    {
+      "stateId": "NG006",
+      "slug": "bayelsa",
+      "name": "Bayelsa"
+    },
+    {
+      "stateId": "NG007",
+      "slug": "benue",
+      "name": "Benue"
+    },
+    {
+      "stateId": "NG008",
+      "slug": "borno",
+      "name": "Borno"
+    },
+    {
+      "stateId": "NG009",
+      "slug": "cross-river",
+      "name": "Cross River"
+    },
+    {
+      "stateId": "NG010",
+      "slug": "delta",
+      "name": "Delta"
+    },
+    {
+      "stateId": "NG011",
+      "slug": "ebonyi",
+      "name": "Ebonyi"
+    },
+    {
+      "stateId": "NG012",
+      "slug": "edo",
+      "name": "Edo"
+    },
+    {
+      "stateId": "NG013",
+      "slug": "ekiti",
+      "name": "Ekiti"
+    },
+    {
+      "stateId": "NG014",
+      "slug": "enugu",
+      "name": "Enugu"
+    },
+    {
+      "stateId": "NG015",
+      "slug": "federal-capital-territory",
+      "name": "Federal Capital Territory"
+    },
+    {
+      "stateId": "NG016",
+      "slug": "gombe",
+      "name": "Gombe"
+    },
+    {
+      "stateId": "NG017",
+      "slug": "imo",
+      "name": "Imo"
+    },
+    {
+      "stateId": "NG018",
+      "slug": "jigawa",
+      "name": "Jigawa"
+    },
+    {
+      "stateId": "NG019",
+      "slug": "kaduna",
+      "name": "Kaduna"
+    },
+    {
+      "stateId": "NG020",
+      "slug": "kano",
+      "name": "Kano"
+    },
+    {
+      "stateId": "NG021",
+      "slug": "katsina",
+      "name": "Katsina"
+    },
+    {
+      "stateId": "NG022",
+      "slug": "kebbi",
+      "name": "Kebbi"
+    },
+    {
+      "stateId": "NG023",
+      "slug": "kogi",
+      "name": "Kogi"
+    },
+    {
+      "stateId": "NG024",
+      "slug": "kwara",
+      "name": "Kwara"
+    },
+    {
+      "stateId": "NG025",
+      "slug": "lagos",
+      "name": "Lagos"
+    },
+    {
+      "stateId": "NG026",
+      "slug": "nasarawa",
+      "name": "Nasarawa"
+    },
+    {
+      "stateId": "NG027",
+      "slug": "niger",
+      "name": "Niger"
+    },
+    {
+      "stateId": "NG028",
+      "slug": "ogun",
+      "name": "Ogun"
+    },
+    {
+      "stateId": "NG029",
+      "slug": "ondo",
+      "name": "Ondo"
+    },
+    {
+      "stateId": "NG030",
+      "slug": "osun",
+      "name": "Osun"
+    },
+    {
+      "stateId": "NG031",
+      "slug": "oyo",
+      "name": "Oyo"
+    },
+    {
+      "stateId": "NG032",
+      "slug": "plateau",
+      "name": "Plateau"
+    },
+    {
+      "stateId": "NG033",
+      "slug": "rivers",
+      "name": "Rivers"
+    },
+    {
+      "stateId": "NG034",
+      "slug": "sokoto",
+      "name": "Sokoto"
+    },
+    {
+      "stateId": "NG035",
+      "slug": "taraba",
+      "name": "Taraba"
+    },
+    {
+      "stateId": "NG036",
+      "slug": "yobe",
+      "name": "Yobe"
+    },
+    {
+      "stateId": "NG037",
+      "slug": "zamfara",
+      "name": "Zamfara"
+    }
+  ]
+}

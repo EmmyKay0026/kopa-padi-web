@@ -11,7 +11,9 @@ export const userNavigation = [
   ["Departure Location", "/locations"], ["Profile", "/profile"], ["Verification", "/verification"],
 ] as const;
 
-const adminNavigation = [
+export const adminNavigation = [
+  ["State guides", "/admin/state-guides"],
+  ["NYSC intakes", "/admin/intakes"],
   ["Operations", "/admin/operations"], ["Bug reports", "/admin/bug-reports"], ["Verifications", "/admin/verifications"],
   ["Geography", "/admin/geography"], ["Orientation Camps", "/admin/orientation-camps"],
   ["Journey Guides", "/admin/journey-guides"], ["Safety", "/admin/safety"], ["Back to app", "/app"],

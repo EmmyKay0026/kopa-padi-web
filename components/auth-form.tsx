@@ -3,10 +3,11 @@ import { GlyphIcon } from "@/components/glyph-icon";
 
 
 import { authClient } from "@/lib/auth-client";
+import { googleAuthRedirects } from "@/lib/google-auth";
 import { Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FormEvent, useId, useState } from "react";
+import { FormEvent, useEffect, useId, useState } from "react";
 import { z } from "zod";
 
 export type AuthMode = "signup" | "signin";
@@ -67,32 +68,48 @@ function GoogleIcon() {
   );
 }
 
-export function GoogleAuthButton({ disabled }: { disabled: boolean }) {
+export function GoogleAuthButton({ disabled, destination }: { disabled: boolean; destination: string }) {
   const enabled = process.env.NEXT_PUBLIC_GOOGLE_AUTH_ENABLED === "true";
   const [loading, setLoading] = useState(false);
+  const [ready, setReady] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  useEffect(() => {
+    setReady(true);
+    if (new URLSearchParams(window.location.search).get("googleAuthError") === "1") {
+      setError("Google sign-in wasn't completed. Please try again or sign in with your email.");
+    }
+  }, []);
   async function connect() {
-    if (!enabled || loading) return;
+    if (!enabled || !ready || disabled || loading) return;
     setLoading(true);
+    setError(null);
     try {
-      await authClient.signIn.social({
+      const response = await authClient.signIn.social({
         provider: "google",
-        callbackURL: "/verification",
+        ...googleAuthRedirects(destination, window.location.origin),
       });
+      if (response.error) setError("Google sign-in is unavailable. Please try again or sign in with your email.");
+    } catch {
+      setError("Unable to connect to Google sign-in. Please try again.");
     } finally {
       setLoading(false);
     }
   }
   return (
+    <>
     <button
       type="button"
       className="auth-google-button"
       onClick={connect}
-      disabled={disabled || loading || !enabled}
+      disabled={disabled || loading || !enabled || !ready}
+      aria-busy={loading}
       title={!enabled ? "Google sign-in is not configured yet" : undefined}
     >
       <GoogleIcon />
       {loading ? "Connecting…" : "Continue with Google"}
     </button>
+    {error ? <p role="alert" className="auth-status error">{error}</p> : null}
+    </>
   );
 }
 
@@ -147,11 +164,14 @@ function SubmitButton({
   loading: boolean;
   children: React.ReactNode;
 }) {
+  const [ready, setReady] = useState(false);
+  useEffect(() => { setReady(true); }, []);
   return (
     <button
       type="submit"
       className="btn-primary group mt-1 w-full gap-2"
-      disabled={loading}
+      disabled={!ready || loading}
+      aria-busy={!ready || loading}
     >
       {loading ? <span className="auth-spinner" aria-hidden="true" /> : null}
       {loading ? "Please wait…" : children}
@@ -244,12 +264,13 @@ export function SignUpForm({ onModeChange, destination }: Props) {
         Join Kopa-Padi and start travelling together.
       </p>
       <form
+        method="post"
         noValidate
         onSubmit={submit}
         className="mt-6"
         aria-label="Create your Kopa-Padi account"
       >
-        <GoogleAuthButton disabled={submitting} />
+        <GoogleAuthButton disabled={submitting} destination={destination} />
         <Divider />
         <div className="grid grid-cols-2 gap-3">
           <label className="auth-label" htmlFor={`${id}-first`}>
@@ -379,12 +400,13 @@ export function SignInForm({ onModeChange, destination }: Props) {
       <h1 className="auth-title">Welcome back</h1>
       <p className="auth-support">Sign in to continue your journey.</p>
       <form
+        method="post"
         noValidate
         onSubmit={submit}
         className="mt-7"
         aria-label="Sign in to Kopa-Padi"
       >
-        <GoogleAuthButton disabled={submitting} />
+        <GoogleAuthButton disabled={submitting} destination={destination} />
         <Divider />
         <label className="auth-label" htmlFor={`${id}-email`}>
           Email address

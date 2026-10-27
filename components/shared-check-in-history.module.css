@@ -1,0 +1,118 @@
+.history {
+  margin-top: 18px;
+  border-top: 1px solid #e1e9e7;
+  padding-top: 18px;
+}
+
+.heading h2 {
+  font-size: 15px;
+  font-weight: 850;
+}
+
+.heading p {
+  margin-top: 4px;
+  color: #64748b;
+  font-size: 11px;
+}
+
+.list {
+  margin-top: 16px;
+}
+
+.list > li {
+  position: relative;
+  display: flex;
+  gap: 12px;
+  padding-bottom: 20px;
+}
+
+.list > li:not(:last-child)::before {
+  position: absolute;
+  top: 30px;
+  bottom: 0;
+  left: 14px;
+  width: 1px;
+  background: #dce7e5;
+  content: "";
+}
+
+.marker {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  flex: none;
+  place-items: center;
+  border-radius: 50%;
+  background: #e2f8f1;
+  color: #08755c;
+}
+
+.entry {
+  min-width: 0;
+  padding-top: 1px;
+}
+
+.entry h3 {
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.entry time {
+  display: block;
+  margin-top: 3px;
+  color: #64748b;
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.entry blockquote {
+  margin-top: 8px;
+  border-left: 2px solid #cce5dd;
+  padding-left: 10px;
+  color: #526a66;
+  font-size: 12px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.danger .marker {
+  background: #fff1f2;
+  color: #be123c;
+}
+
+.danger h3 {
+  color: #be123c;
+}
+
+.empty {
+  margin-top: 14px;
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.load {
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid #cce5dd;
+  border-radius: 10px;
+  padding: 10px 14px;
+  color: #0f766e;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.load:hover {
+  background: #eef8f5;
+}
+
+.load:focus-visible {
+  outline: 2px solid #0f766e;
+  outline-offset: 3px;
+}
+
+.load:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}

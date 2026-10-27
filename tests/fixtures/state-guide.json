@@ -1,0 +1,101 @@
+{
+  "secretariat": {
+    "address": "Kashim Ibrahim Road, P.M.B. 1124, Maiduguri, Borno State.",
+    "phoneNumber": "07032147636",
+    "email": "borno@nysc.gov.ng",
+    "sourceUrl": "https://www.nysc.gov.ng/secretariat.html",
+    "googleMapsUrl": "https://maps.app.goo.gl/eXxYfjHik9iHnd2R7"
+  },
+  "information": {
+    "capital": "Maiduguri",
+    "geopoliticalZone": "North East",
+    "overview": "North-eastern state with capital Maiduguri, known for the Kanem–Bornu historical legacy, Sahelian landscapes and Lake Chad Basin communities.",
+    "spokenLanguages": "Kanuri, Hausa, Shuwa Arabic, Fulfulde and other local languages; English in formal contexts.",
+    "culturalHighlights": "Shehu of Borno's royal institutions, Kanuri craftsmanship, historic trading culture and Islamic scholarship.",
+    "localFood": "Tuwo, millet and sorghum dishes, masa, dried meat and regional stews.",
+    "weatherAndClimate": "Sahelian hot dry conditions and a short rainy season, with harmattan dust in the cooler dry months. Rainfall and weather vary near the Lake Chad Basin.",
+    "transportOptions": "Maiduguri has a major urban road network and airport; buses, taxis and tricycles serve the city. Movement outside the city may be restricted or unsafe and must not be inferred from a map.",
+    "travelSafetyNotes": "High risk: UK FCDO regional advice lists the whole state under \"against all travel\" (checked 25 Oct 2026), reflecting risks including violent attack and kidnapping. This is foreign-government guidance, not an NYSC deployment instruction. NYSC advises daylight journeys, registered transport operators and notifying trusted contacts. Local conditions change: check your actual roads, transport hub and camp approach with NYSC before travel.",
+    "costOfLiving": "May 2026 NBS Transport Fare Watch: average surveyed intracity bus fare in the state was approximately ₦1,511 per ride. This is a survey average, not a fare quote for the camp route. Accommodation and food budgets vary substantially by town, neighbourhood, PPA support and season; no defensible current state-wide monthly rent estimate was found. Ask current corps members for a dated local accommodation and food quote before paying.",
+    "placesToVisit": "Shehu of Borno's Palace and Maiduguri cultural heritage; wider Lake Chad historic landscapes are not routine leisure destinations under current security concerns.",
+    "pcmTips": "Verify the exact operating orientation venue shown on your call-up letter and the current NYSC security arrangements. Do not attempt self-directed travel to remote heritage sites or onward rural routes. NYSC cautions against night travel."
+  },
+  "research": {
+    "reviewedOn": "2026-10-25",
+    "status": "researched_editorial_draft_requires_local_verification",
+    "notes": "Narrative is for orientation, not live route clearance or a financial quote. Attractions are descriptive, not security-verified recommendations. Languages and foods are examples, not exhaustive. Online community anecdotes are not used as verified safety facts.",
+    "sources": {
+      "overviewCultureAttractions": [
+        "https://www.visitnigeria.io/destinations/borno",
+        "https://nipc.gov.ng/nigeria/borno"
+      ],
+      "geopoliticalZone": [
+        "https://nigeriahighcommissionkenya.org/nigeria/map"
+      ],
+      "weatherAndClimate": [
+        "https://nimet.gov.ng/scp?id=3"
+      ],
+      "travelSafetyNotes": [
+        "https://www.gov.uk/foreign-travel-advice/nigeria/regional-risks",
+        "https://www.channelstv.com/2026/01/20/nysc-warns-batch-a-corps-members-against-night-travel/"
+      ],
+      "costOfLiving": [
+        "https://microdata.nigerianstat.gov.ng/index.php/catalog/161/related-materials",
+        "https://microdata.nigerianstat.gov.ng/index.php/catalog/162/related-materials",
+        "https://outbid.ng/transport/intracity"
+      ],
+      "pcmTips": [
+        "https://www.channelstv.com/2026/01/20/nysc-warns-batch-a-corps-members-against-night-travel/",
+        "https://www.nysc.gov.ng/camps.html"
+      ],
+      "communityAnecdotes": []
+    },
+    "sourceCaveats": [],
+    "dynamicFieldsRequireRefresh": [
+      "travelSafetyNotes",
+      "costOfLiving",
+      "transportOptions",
+      "pcmTips"
+    ]
+  },
+  "photos": [
+    {
+      "src": "https://picsum.photos/seed/kopapadi-bo-gallery-1/1200/800",
+      "alt": "Temporary illustrative photograph for the Borno travel guide",
+      "caption": "Sample gallery image for Borno; this photograph is not verified as a location in the state.",
+      "illustrative": true
+    },
+    {
+      "src": "https://picsum.photos/seed/kopapadi-bo-gallery-2/1200/800",
+      "alt": "Second temporary illustrative photograph for the Borno travel guide",
+      "caption": "Temporary visual placeholder for Borno. Replace with an accurately identified and licensed local photograph.",
+      "illustrative": true
+    }
+  ],
+  "expectations": [
+    {
+      "title": "Finding the orientation venue",
+      "description": "The dataset lists an NYSC orientation venue in Moduganari, Maiduguri, Maiduguri Metropolitan Council. Confirm the active location and reporting instructions for your batch with NYSC before travelling."
+    },
+    {
+      "title": "Transport and arrival",
+      "description": "Maiduguri has a major urban road network and airport; buses, taxis and tricycles serve the city. Movement outside the city may be restricted or unsafe and must not be inferred from a map."
+    },
+    {
+      "title": "Weather and packing",
+      "description": "Sahelian hot dry conditions and a short rainy season, with harmattan dust in the cooler dry months. Rainfall and weather vary near the Lake Chad Basin."
+    },
+    {
+      "title": "Languages and local life",
+      "description": "Common languages: Kanuri, Hausa, Shuwa Arabic, Fulfulde and other local languages; English in formal contexts. Cultural highlights: Shehu of Borno's royal institutions, Kanuri craftsmanship, historic trading culture and Islamic scholarship."
+    },
+    {
+      "title": "Food and everyday expenses",
+      "description": "Foods you may encounter: Tuwo, millet and sorghum dishes, masa, dried meat and regional stews. Plan separately for meals, local transport and accommodation; confirm current prices in the town you will actually be staying in."
+    }
+  ],
+  "stateId": "NG008",
+  "name": "Borno",
+  "version": 1,
+  "updatedAt": "2026-10-26T00:00:00.000Z"
+}

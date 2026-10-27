@@ -1,0 +1,47 @@
+.background {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.backdrop {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  overflow: hidden;
+}
+
+.backdropOverlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(4, 30, 28, 0.96);
+}
+
+.step {
+  scroll-margin-top: 7rem;
+}
+
+@media (min-width: 1024px) {
+  .backdropOverlay {
+    background: linear-gradient(
+      90deg,
+      rgba(4, 30, 28, 0.92),
+      rgba(4, 30, 28, 0.85) 45%,
+      rgba(4, 30, 28, 0.62)
+    );
+  }
+
+  .step {
+    display: flex;
+    min-height: calc(100svh - 8rem);
+    flex-direction: column;
+    justify-content: center;
+    padding-block: 4rem;
+  }
+
+  .visual {
+    position: sticky;
+    top: 7rem;
+    height: min(38rem, calc(100svh - 9rem));
+  }
+}

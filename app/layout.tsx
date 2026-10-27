@@ -20,7 +20,7 @@ export default function Layout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html suppressHydrationWarning lang="en">
+    <html suppressHydrationWarning lang="en" data-scroll-behavior="smooth">
       <body>
         <AuthGuard>{children}</AuthGuard>
         <BugReportWidget />
@@ -29,4 +29,3 @@ export default function Layout({
     </html>
   );
 }
-

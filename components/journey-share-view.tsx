@@ -2,6 +2,8 @@
 import { BrandLogo } from "@/components/brand-logo";
 
 import { AppIcon, type AppIconName } from "./app-icon";
+import { SharedCheckInHistory } from "./shared-check-in-history";
+import { appendCheckInHistory, checkInPresentation, emptyCheckInHistory, refreshCheckInHistory, type CheckInHistoryPage } from "@/lib/journey-check-in-history";
 
 import { api } from "@/lib/api";
 import Link from "next/link";
@@ -18,6 +20,7 @@ type Shared = {
     message: string | null;
     createdAt: string;
   } | null;
+  checkInHistory?: CheckInHistoryPage;
   currentLocation: {
     latitude: string;
     longitude: string;
@@ -281,15 +284,6 @@ function JourneyMetaCards({
   );
 }
 
-const CHECKIN_COPY: Record<string, { label: string; icon: IconName }> = {
-  SAFE: { label: "I’m Safe", icon: "shield" },
-  CONNECTION_REACHED: { label: "Connection Reached", icon: "route" },
-  NEAR_DESTINATION: { label: "Near Destination", icon: "pin" },
-  NEED_HELP: { label: "Need Help", icon: "warning" },
-  ARRIVED: { label: "I’ve Arrived", icon: "flag" },
-  STARTED: { label: "Journey Started", icon: "journey" },
-};
-
 function LatestCheckIn({ data }: { data: Shared }) {
   const checkIn = data.lastCheckIn;
   if (!checkIn)
@@ -306,10 +300,7 @@ function LatestCheckIn({ data }: { data: Shared }) {
         </div>
       </section>
     );
-  const config = CHECKIN_COPY[checkIn.type] ?? {
-    label: checkIn.type.replaceAll("_", " "),
-    icon: "check" as const,
-  };
+  const config = checkInPresentation(checkIn.type);
   const needHelp = checkIn.type === "NEED_HELP";
   return (
     <section
@@ -383,9 +374,9 @@ function TemporaryLocationAction({ data }: { data: Shared }) {
       <p>
         <b>View temporary location</b>
         <small>
-          Shared explicitly by {sentenceName(data.travellerName)} at{" "}
+          Snapshot shared by {sentenceName(data.travellerName)} at{" "}
           <time dateTime={sharedAt}>{formatDateTime(sharedAt)}</time>. Expires{" "}
-          <time dateTime={expiresAt}>{formatDateTime(expiresAt)}</time>.
+          <time dateTime={expiresAt}>{formatDateTime(expiresAt)}</time>. The traveler must renew it to update their position or extend visibility.
         </small>
       </p>
       <Icon name="external" size={17} />
@@ -433,7 +424,7 @@ function JourneyPrivacyNotice() {
   );
 }
 
-function JourneyShareSkeleton() {
+function JourneyShareSkeleton({ minHeight }: { minHeight?: number }) {
   return (
     <SharePage>
       <JourneyShareHeader />
@@ -441,6 +432,7 @@ function JourneyShareSkeleton() {
         className="share-receipt share-skeleton-wrap"
         aria-label="Loading Journey update"
         aria-busy="true"
+        style={minHeight ? { minHeight } : undefined}
       >
         <SharedJourneyBadge />
         <div className="share-skeleton heading" />
@@ -502,60 +494,110 @@ function SharePage({ children }: { children: ReactNode }) {
 
 export function JourneyShareView({ token }: { token: string }) {
   const generation = useRef(0);
+  const receipt = useRef<HTMLElement | null>(null);
+  const [pendingHeight, setPendingHeight] = useState<number>();
   const [data, setData] = useState<Shared | null>(null);
   const [unavailable, setUnavailable] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [refreshError, setRefreshError] = useState("");
   const [refreshedAt, setRefreshedAt] = useState<Date | null>(null);
+  const [history, setHistory] = useState<CheckInHistoryPage>(emptyCheckInHistory);
+  const [loadingEarlier, setLoadingEarlier] = useState(false);
 
   const load = useCallback(
     async (refresh = false) => {
       const request = ++generation.current;
-      if (refresh) { setRefreshing(true); setData(null); }
+      setLoadingEarlier(false);
+      if (refresh) {
+        const height = receipt.current?.offsetHeight;
+        if (height) setPendingHeight(height);
+        setRefreshing(true);
+        setData(null);
+      }
       try {
         const shared = await api<Shared>(
           `/journey-share/${encodeURIComponent(token)}`, {cache:'no-store',referrerPolicy:'no-referrer'},
         );
         if (request !== generation.current || document.hidden) return;
+        if (new Date(shared.shareExpiresAt).getTime() <= Date.now()) {
+          setData(null);
+          setHistory(emptyCheckInHistory);
+          setUnavailable(true);
+          return;
+        }
         setData(shared);
+        setHistory((current) => refreshCheckInHistory(current, shared.checkInHistory ?? emptyCheckInHistory));
         setRefreshedAt(new Date());
         setUnavailable(false);
         setRefreshError("");
       } catch {
         if (request !== generation.current) return;
         setData(null);
+        setHistory(emptyCheckInHistory);
         setUnavailable(true);
       } finally {
-        setRefreshing(false);
+        if (request === generation.current) setRefreshing(false);
       }
     },
     [token],
   );
 
   useEffect(() => {
+    setData(null);
+    setHistory(emptyCheckInHistory);
+    setUnavailable(false);
+    setPendingHeight(undefined);
     void load();
     const timer = setInterval(() => void load(true), 15000);
-    const hide = () => { generation.current++; setData(null); setUnavailable(false); if (!document.hidden) void load(); };
+    const hide = () => { generation.current++; setData(null); setHistory(emptyCheckInHistory); setUnavailable(false); if (!document.hidden) void load(); };
     document.addEventListener('visibilitychange', hide);
     window.addEventListener('pageshow', hide);
     return () => { clearInterval(timer); document.removeEventListener('visibilitychange', hide); window.removeEventListener('pageshow', hide); };
   }, [load]);
   useEffect(() => {
-    const timer = setInterval(() => setData(current => {
-      if (!current) return current;
-      if (new Date(current.shareExpiresAt).getTime() <= Date.now()) return null;
-      if (current.currentLocation && new Date(current.currentLocation.expiresAt).getTime() <= Date.now()) return {...current,currentLocation:null};
-      return current;
-    }),1000);
+    const expiresAt = data?.shareExpiresAt;
+    const timer = setInterval(() => {
+      if (expiresAt && new Date(expiresAt).getTime() <= Date.now()) {
+        generation.current++;
+        setData(null);
+        setHistory(emptyCheckInHistory);
+        setUnavailable(true);
+        return;
+      }
+      setData(current => current?.currentLocation && new Date(current.currentLocation.expiresAt).getTime() <= Date.now()
+        ? { ...current, currentLocation: null } : current);
+    },1000);
     return () => clearInterval(timer);
-  },[]);
+  },[data?.shareExpiresAt]);
+
+  async function loadEarlier() {
+    const cursor = history.nextCursor;
+    if (!cursor || loadingEarlier || !data) return;
+    const request = generation.current;
+    setLoadingEarlier(true);
+    try {
+      const page = await api<CheckInHistoryPage>(
+        `/journey-share/${encodeURIComponent(token)}/check-ins?before=${encodeURIComponent(cursor)}`,
+        { cache: "no-store", referrerPolicy: "no-referrer" },
+      );
+      if (request !== generation.current || document.hidden) return;
+      setHistory((current) => current.nextCursor === cursor ? appendCheckInHistory(current, page) : current);
+    } catch {
+      if (request !== generation.current) return;
+      setData(null);
+      setHistory(emptyCheckInHistory);
+      setUnavailable(true);
+    } finally {
+      if (request === generation.current) setLoadingEarlier(false);
+    }
+  }
   if (unavailable) return <JourneyUnavailableState />;
-  if (!data || !refreshedAt) return <JourneyShareSkeleton />;
+  if (!data || !refreshedAt) return <JourneyShareSkeleton minHeight={pendingHeight} />;
 
   return (
     <SharePage>
       <JourneyShareHeader />
-      <main className="share-receipt">
+      <main ref={receipt} className="share-receipt">
         <SharedJourneyBadge />
         <TravelerJourneyHeading data={data} />
         <JourneyRoute destination={data.destination} />
@@ -563,6 +605,7 @@ export function JourneyShareView({ token }: { token: string }) {
         <JourneyTimeline data={data} />
         <JourneyMetaCards expectedArrivalAt={data.expectedArrivalAt} />
         <LatestCheckIn data={data} />
+        {data.checkInHistory ? <SharedCheckInHistory history={history} loading={loadingEarlier} onLoadEarlier={() => void loadEarlier()} /> : null}
         <AttentionNotice data={data} />
         <CompletionNotice status={data.status} />
         <TemporaryLocationAction data={data} />

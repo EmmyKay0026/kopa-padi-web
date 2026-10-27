@@ -2,6 +2,8 @@
 import { GlyphIcon } from "@/components/glyph-icon";
 
 import { api } from "@/lib/api";
+import { activeCatalogIntake } from "@/lib/active-intake";
+import { formatDateOfBirth, type VerificationDetails } from "@/lib/verification-details";
 import Link from "next/link";
 import { UserMobileMenu } from "./user-navigation";
 import { UserSidebar } from "./user-sidebar";
@@ -22,13 +24,15 @@ type Intake = {
   stream: string;
 };
 type Camp = { id: string; stateName: string; campName: string };
-type Catalog = { intakes: Intake[]; camps: Camp[] };
+type Catalog = { intakes: Intake[]; activeIntake?: Intake | null; camps: Camp[] };
 type Status = {
   verification: {
     status: string;
     userSafeReason?: string;
     submittedAt?: string;
     verifiedAt?: string;
+    dateOfBirth?: string | null;
+    matriculationNumber?: string | null;
   };
   intake?: Intake;
   camp?: Camp;
@@ -51,7 +55,6 @@ const nav = [
   ["♙", "Profile", "/profile"],
 ];
 const steps = ["Profile", "NYSC assignment", "Upload document", "Review"];
-const unique = (values: string[]) => Array.from(new Set(values));
 const size = (bytes: number) =>
   bytes < 1024 * 1024
     ? `${Math.ceil(bytes / 1024)} KB`
@@ -311,13 +314,44 @@ function FilePicker({
 function Privacy() {
   return (
     <section className="mt-5 rounded-xl bg-primary-light/30 p-4 text-[10px] leading-5 text-muted">
-      <b className="text-primary-dark"><GlyphIcon name="▣" /> &nbsp; Your document is private</b>
+      <b className="text-primary-dark"><GlyphIcon name="▣" /> &nbsp; Your verification details are private</b>
       <p>
-        It is only available to authorized Kopa-Padi reviewers. Other travelers
-        cannot access it. Your private last name is not public, and your
+        Your document, date of birth and matriculation number are only available
+        to you and authorized Kopa-Padi reviewers. Other travelers cannot access
+        them. Your private last name is not public, and your
         verified camp becomes your trusted Travel Plan destination.
       </p>
     </section>
+  );
+}
+
+function SenateListFields({ details, onChange, disabled = false }: {
+  details: VerificationDetails;
+  onChange: (key: keyof VerificationDetails, value: string) => void;
+  disabled?: boolean;
+}) {
+  return (
+    <fieldset disabled={disabled} className="mt-4">
+      <legend className="text-sm font-bold">NYSC Senate list details</legend>
+      <p className="mb-3 mt-1 text-xs leading-5 text-muted">
+        Enter these exactly as recorded with your institution. Only authorized
+        reviewers can use them to check your NYSC Senate list record.
+      </p>
+      <label className="travel-label">
+        Date of birth *
+        <input className="field" name="dateOfBirth" type="date" required
+          autoComplete="bday" min="0001-01-01" max={new Date().toISOString().slice(0, 10)}
+          value={details.dateOfBirth} onChange={(e) => onChange("dateOfBirth", e.target.value)} />
+      </label>
+      <label className="travel-label">
+        Matriculation number *
+        <input className="field" name="matriculationNumber" type="text" required
+          maxLength={80} autoCapitalize="none" spellCheck={false}
+          aria-describedby="matriculation-number-help"
+          value={details.matriculationNumber} onChange={(e) => onChange("matriculationNumber", e.target.value)} />
+        <small id="matriculation-number-help">Use your institution&apos;s matriculation number, including any letters, slashes or leading zeros.</small>
+      </label>
+    </fieldset>
   );
 }
 
@@ -330,14 +364,12 @@ export function VerificationFlow() {
     [error, setError] = useState(""),
     [fileError, setFileError] = useState(""),
     [file, setFile] = useState<File | null>(null),
+    [details, setDetails] = useState<VerificationDetails>({ dateOfBirth: "", matriculationNumber: "" }),
     [profile, setProfile] = useState<Profile>({
       firstName: "",
       lastNamePrivate: "",
       displayName: "",
     }),
-    [year, setYear] = useState(""),
-    [batch, setBatch] = useState(""),
-    [stream, setStream] = useState(""),
     [campId, setCampId] = useState("");
   const load = useCallback(async () => {
     setLoading(true);
@@ -349,11 +381,10 @@ export function VerificationFlow() {
       ]);
       setCatalog(c);
       setStatus(s);
-      if (s.intake) {
-        setYear(s.intake.serviceYear);
-        setBatch(s.intake.batch);
-        setStream(s.intake.stream);
-      }
+      setDetails((previous) => ({
+        dateOfBirth: s.verification.dateOfBirth ?? previous.dateOfBirth,
+        matriculationNumber: s.verification.matriculationNumber ?? previous.matriculationNumber,
+      }));
       if (s.camp) setCampId(s.camp.id);
     } catch {
       setError("We couldn't load verification right now. Please try again.");
@@ -367,25 +398,22 @@ export function VerificationFlow() {
   if (loading) return <Loading />;
   const state = status?.verification.status ?? "UNVERIFIED";
   const pending = state === "SUBMITTED" || state === "UNDER_REVIEW";
-  const intake = catalog.intakes.find(
-    (x) => x.serviceYear === year && x.batch === batch && x.stream === stream,
-  );
+  const intake = activeCatalogIntake(catalog);
+  const year = intake?.serviceYear ?? "";
+  const batch = intake?.batch ?? "";
+  const stream = intake?.stream ?? "";
   const camp = catalog.camps.find((x) => x.id === campId);
-  const years = unique(catalog.intakes.map((x) => x.serviceYear));
-  const batches = unique(
-    catalog.intakes.filter((x) => x.serviceYear === year).map((x) => x.batch),
-  );
-  const streams = unique(
-    catalog.intakes
-      .filter((x) => x.serviceYear === year && x.batch === batch)
-      .map((x) => x.stream),
-  );
+  function changeDetails(key: keyof VerificationDetails, value: string) {
+    setDetails((previous) => ({ ...previous, [key]: value }));
+  }
   async function saveProfile(e: FormEvent) {
     e.preventDefault();
     if (
       !profile.firstName.trim() ||
       !profile.lastNamePrivate.trim() ||
-      !profile.displayName.trim()
+      !profile.displayName.trim() ||
+      !details.dateOfBirth ||
+      !details.matriculationNumber.trim()
     ) {
       setError("Complete all profile fields.");
       return;
@@ -406,7 +434,7 @@ export function VerificationFlow() {
   }
   function assignmentNext() {
     if (!intake) {
-      setError("Select your complete NYSC intake.");
+      setError("No NYSC batch and stream are currently open. Please check back later.");
       return;
     }
     if (!campId) {
@@ -424,19 +452,32 @@ export function VerificationFlow() {
     setStep(4);
   }
   async function submit() {
-    if (!file || !intake || !campId || busy) return;
+    const assignment = state === "RESUBMISSION_REQUIRED" ? status?.intake : intake;
+    const assignedCampId = state === "RESUBMISSION_REQUIRED" ? status?.camp?.id : campId;
+    if (!file || !assignment || !assignedCampId || busy) return;
+    if (!details.dateOfBirth || !details.matriculationNumber.trim()) {
+      setError("Enter your date of birth and matriculation number.");
+      return;
+    }
     setBusy(true);
     setError("");
     const body = new FormData();
-    body.set("nyscIntakeId", intake.id);
-    body.set("orientationCampId", campId);
+    body.set("nyscIntakeId", assignment.id);
+    body.set("orientationCampId", assignedCampId);
+    body.set("dateOfBirth", details.dateOfBirth);
+    body.set("matriculationNumber", details.matriculationNumber.trim());
     body.set("document", file);
     try {
       await api("/verification", { method: "POST", body });
       await load();
-    } catch {
+    } catch (error) {
+      if (error instanceof Error && error.message === "The active NYSC intake has changed. Refresh and try again.") {
+        await load();
+        setStep(2);
+        setFile(null);
+      }
       setError(
-        "We couldn't submit your verification right now. Please try again.",
+        error instanceof Error ? error.message : "We couldn't submit your verification right now. Please try again.",
       );
     } finally {
       setBusy(false);
@@ -536,11 +577,11 @@ export function VerificationFlow() {
             kind={state}
             reason={status?.verification.userSafeReason}
           />
-          <section className="rounded-2xl border border-border bg-surface p-5 shadow-soft">
+          <form onSubmit={(event) => { event.preventDefault(); void submit(); }} className="rounded-2xl border border-border bg-surface p-5 shadow-soft">
             <h2 className="text-lg font-black">Update your information</h2>
             <p className="mt-1 text-xs text-muted">
-              Your saved NYSC assignment is preserved. Upload a new call-up
-              letter below.
+              Check your date of birth and matriculation number, then upload a
+              new call-up letter. Your saved NYSC assignment is preserved.
             </p>
             <div className="my-5 rounded-xl bg-background p-4 text-xs">
               <b>
@@ -551,6 +592,7 @@ export function VerificationFlow() {
                 {status?.camp?.campName}, {status?.camp?.stateName}
               </p>
             </div>
+            <SenateListFields details={details} onChange={changeDetails} disabled={busy} />
             <FilePicker
               file={file}
               setFile={setFile}
@@ -559,7 +601,7 @@ export function VerificationFlow() {
             />
             <Privacy />
             <button
-              onClick={() => void submit()}
+              type="submit"
               disabled={!file || busy}
               className="btn-primary mt-5 w-full"
             >
@@ -573,7 +615,7 @@ export function VerificationFlow() {
                 {error}
               </p>
             )}
-          </section>
+          </form>
         </main>
         {busy && <Overlay />}
       </Shell>
@@ -636,6 +678,7 @@ export function VerificationFlow() {
                     <small className="font-normal text-muted">{help}</small>
                   </label>
                 ))}
+                <SenateListFields details={details} onChange={changeDetails} disabled={busy} />
                 <button disabled={busy} className="btn-primary mt-6 w-full">
                   {busy ? "Saving..." : "Save profile"}
                 </button>
@@ -644,56 +687,13 @@ export function VerificationFlow() {
               <>
                 <h2 className="text-lg font-black">2. Your NYSC assignment</h2>
                 <p className="mb-5 mt-1 text-xs text-muted">
-                  Select your NYSC intake and assigned orientation camp.
+                  Your service year, batch and stream are set by the active intake. Select your assigned orientation camp.
                 </p>
-                <label className="travel-label">
-                  Service year *
-                  <select
-                    className="field"
-                    value={year}
-                    onChange={(e) => {
-                      setYear(e.target.value);
-                      setBatch("");
-                      setStream("");
-                    }}
-                  >
-                    <option value="">Select service year</option>
-                    {years.map((v) => (
-                      <option key={v}>{v}</option>
-                    ))}
-                  </select>
-                </label>
-                <label className="travel-label">
-                  Batch *
-                  <select
-                    className="field"
-                    value={batch}
-                    disabled={!year}
-                    onChange={(e) => {
-                      setBatch(e.target.value);
-                      setStream("");
-                    }}
-                  >
-                    <option value="">Select batch</option>
-                    {batches.map((v) => (
-                      <option key={v}>{v}</option>
-                    ))}
-                  </select>
-                </label>
-                <label className="travel-label">
-                  Stream *
-                  <select
-                    className="field"
-                    value={stream}
-                    disabled={!batch}
-                    onChange={(e) => setStream(e.target.value)}
-                  >
-                    <option value="">Select stream</option>
-                    {streams.map((v) => (
-                      <option key={v}>{v}</option>
-                    ))}
-                  </select>
-                </label>
+                {intake ? <section aria-label="Active NYSC intake" className="rounded-xl border border-primary/20 bg-primary-light/25 p-5">
+                  <p className="text-xs font-bold text-primary">Active NYSC intake</p>
+                  <dl className="mt-4 grid grid-cols-3 gap-3 text-sm">{[["Service year", year], ["Batch", batch], ["Stream", stream]].map(([label, value]) => <div key={label}><dt className="text-xs text-muted">{label}</dt><dd className="mt-1 font-bold">{value}</dd></div>)}</dl>
+                  <p className="mt-4 text-xs leading-6 text-muted">This assignment is fixed for new verifications. Your call-up letter should match this intake.</p>
+                </section> : <p role="alert" className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm leading-7 text-amber-950">No NYSC batch and stream are currently open. Please check back later.</p>}
                 <label className="travel-label">
                   Orientation camp *
                   <select
@@ -709,7 +709,7 @@ export function VerificationFlow() {
                     ))}
                   </select>
                 </label>
-                <Actions back={() => setStep(1)} next={assignmentNext} />
+                <Actions back={() => setStep(1)} next={assignmentNext} disabled={!intake} />
               </>
             ) : step === 3 ? (
               <>
@@ -741,6 +741,8 @@ export function VerificationFlow() {
                     ["First name", profile.firstName],
                     ["Last name (private)", profile.lastNamePrivate],
                     ["Display name", profile.displayName],
+                    ["Date of birth (private)", formatDateOfBirth(details.dateOfBirth)],
+                    ["Matriculation number (private)", details.matriculationNumber.trim()],
                   ]}
                 />
                 <Review
@@ -796,10 +798,12 @@ function Actions({
   back,
   next,
   submit = false,
+  disabled = false,
 }: {
   back: () => void;
   next: () => void;
   submit?: boolean;
+  disabled?: boolean;
 }) {
   return (
     <div className="mt-6 grid grid-cols-2 gap-3">
@@ -810,7 +814,7 @@ function Actions({
       >
         <GlyphIcon name="←" /> Back
       </button>
-      <button type="button" onClick={next} className="btn-primary">
+      <button type="button" onClick={next} disabled={disabled} className="btn-primary disabled:opacity-50">
         {submit ? "Submit verification" : <>Continue <GlyphIcon name="→" /></>}
       </button>
     </div>

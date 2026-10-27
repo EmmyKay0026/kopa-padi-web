@@ -10,6 +10,8 @@ import { api } from "@/lib/api";
 import { authClient } from "@/lib/auth-client";
 import { JourneyGuidePanel } from "./journey-guide-panel";
 import { UserSidebar } from "./user-sidebar";
+import { contactShareState, formatSharingTime, isShareActive } from "@/lib/journey-sharing";
+import { JourneyLocationGuide, JourneyLocationSharing, useSharingNow, type LocationAudience, type LocationSharingPolicy, type TemporaryLocation } from "./journey-location-sharing";
 
 type Contact = {
   id: string;
@@ -45,6 +47,8 @@ type Data = {
     status: string;
     expiresAt: string;
   }[];
+  locationShares?: TemporaryLocation[];
+  locationSharing?: LocationSharingPolicy;
   emergencyNumbers: { general: string; road: string };
 };
 type IconName = AppIconName;
@@ -59,7 +63,8 @@ function Icon({
 }) {
   return <AppIcon name={name} size={size} className={className} />;
 }
-function Logo() { return <BrandLogo href="/" />;
+function Logo() {
+  return <BrandLogo href="/" />;
 }
 function Sidebar() {
   return <UserSidebar active="Journey Safety" />;
@@ -72,7 +77,8 @@ function ShellTop() {
       <header className="hidden h-20 items-center justify-between border-b bg-white px-8 lg:flex">
         <UserNavigationSearch />
         <div className="flex items-center gap-4">
-          <Link href="/circle#circle-chat"
+          <Link
+            href="/circle#circle-chat"
             aria-label="Circle messages"
             className="grid h-11 w-11 place-items-center"
           >
@@ -415,27 +421,25 @@ function Contacts({
   setShareUrl: (x: string) => void;
 }) {
   const [adding, setAdding] = useState(false);
+  const now = useSharingNow();
   async function add(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const form = e.currentTarget;
     const f = new FormData(form);
-    await act(
-      async () => {
-        const result = await api("/trusted-contacts", {
-          method: "POST",
-          body: JSON.stringify({
-            name: f.get("name"),
-            relationship: f.get("relationship"),
-            phone: f.get("phone") || null,
-            email: f.get("email") || null,
-          }),
-        });
-        form.reset();
-        setAdding(false);
-        return result;
-      },
-      "Trusted contact added.",
-    );
+    await act(async () => {
+      const result = await api("/trusted-contacts", {
+        method: "POST",
+        body: JSON.stringify({
+          name: f.get("name"),
+          relationship: f.get("relationship"),
+          phone: f.get("phone") || null,
+          email: f.get("email") || null,
+        }),
+      });
+      form.reset();
+      setAdding(false);
+      return result;
+    }, "Trusted contact added.");
   }
   async function create(id: string) {
     const r = await api<{ url: string }>("/journeys/current/share", {
@@ -457,12 +461,11 @@ function Contacts({
         </button>
       }
     >
+      <p className="-mt-2 mb-4 text-xs leading-5 text-muted">Create a private Journey link for each family member, then copy and send it to them. Expired links need to be renewed and sent again.</p>
       <div className="space-y-3">
         {data.contacts.length ? (
           data.contacts.map((c) => {
-            const active = data.shares.some(
-              (s) => s.trustedContactId === c.id && s.status === "ACTIVE",
-            );
+            const state = contactShareState(data.shares, c.id, now);
             return (
               <article
                 key={c.id}
@@ -477,14 +480,16 @@ function Contacts({
                     {c.relationship}
                     {c.phone ? " - " + c.phone : ""}
                   </p>
+                  {state.share ? <p className="mt-1 text-[11px] text-muted">Link expires <time dateTime={state.share.expiresAt}>{formatSharingTime(state.share.expiresAt)}</time></p> : null}
+                  {state.status === "expired" ? <p className="mt-1 text-xs font-bold text-muted">Link expired</p> : null}
                 </div>
-                {active ? (
+                {state.status === "active" ? (
                   <span className="rounded-full bg-success/10 px-2 py-1 text-[10px] font-bold text-success">
                     Link active
                   </span>
                 ) : (
                   <button
-                    disabled={busy}
+                    disabled={busy || data.journey.status === "COMPLETED"}
                     onClick={() =>
                       void act(
                         () => create(c.id),
@@ -493,7 +498,7 @@ function Contacts({
                     }
                     className="rounded-lg border border-primary px-3 py-2 text-xs font-bold text-primary"
                   >
-                    Share
+                    {state.status === "expired" ? "Renew link" : "Share"}
                   </button>
                 )}
                 <button
@@ -552,7 +557,7 @@ function Contacts({
           </button>
         </form>
       ) : null}
-      {data.shares.some((s) => s.status === "ACTIVE") ? (
+      {data.shares.some((s) => isShareActive(s, now)) ? (
         <button
           disabled={busy}
           onClick={() =>
@@ -560,7 +565,10 @@ function Contacts({
               "Revoke every active journey share link? Your contacts will lose access immediately.",
             ) &&
             void act(
-              () => api("/journeys/current/share/revoke", { method: "POST" }),
+              async () => {
+                window.dispatchEvent(new Event("sharing-withdrawn"));
+                return api("/journeys/current/share/revoke", { method: "POST" });
+              },
               "All Journey links revoked.",
             )
           }
@@ -649,7 +657,7 @@ function Emergency({
   busy: boolean;
   act: (w: () => Promise<unknown>, s: string) => Promise<void>;
   checkIn: (x: string) => void;
-  shareLocation: (x: "TRUSTED_CONTACT" | "CIRCLE") => void;
+  shareLocation: (audience: LocationAudience, durationMinutes: number) => void;
 }) {
   return (
     <Card title="Need Help?" className="border-danger/25 bg-danger/[.025]">
@@ -678,7 +686,7 @@ function Emergency({
         >
           Record Need Help
         </button>
-        <div className="grid grid-cols-3 gap-2 pt-2">
+        <div className="grid grid-cols-2 gap-2 pt-2">
           <button
             disabled={busy}
             onClick={() =>
@@ -712,29 +720,16 @@ function Emergency({
               <Icon name="people" className="mx-auto mb-2" />
               Alert Circle
             </button>
-          ) : (
-            <span />
-          )}
-          <button
-            onClick={() => shareLocation("TRUSTED_CONTACT")}
-            className="rounded-xl border bg-white p-3 text-xs font-bold"
-          >
-            <Icon name="pin" className="mx-auto mb-2" />
-            Share Location
-          </button>
+          ) : null}
         </div>
-        {data.journey.journeyMode === "CIRCLE" ? (
-          <button
-            onClick={() => shareLocation("CIRCLE")}
-            className="mt-2 text-xs font-bold text-primary"
-          >
-            Share temporary location with Circle
-          </button>
-        ) : null}
-        <p className="mt-3 text-[11px] leading-4 text-muted">
-          Location is requested only when you choose to share it and expires
-          automatically. Continuous tracking is never enabled.
-        </p>
+        <JourneyLocationSharing
+          locations={data.locationShares ?? []}
+          policy={data.locationSharing ?? { defaultDurationMinutes: 60, maxDurationMinutes: 1440 }}
+          busy={busy}
+          contactLinks={data.shares}
+          circle={data.journey.journeyMode === "CIRCLE"}
+          onShare={shareLocation}
+        />
       </div>
     </Card>
   );
@@ -861,18 +856,23 @@ function Sticky({ help }: { help: () => void }) {
 export function JourneyDashboard() {
   const locationConsent = useRef(0);
   useEffect(() => {
-    const cancel = () => { locationConsent.current++; setShareUrl(''); };
-    window.addEventListener('sharing-withdrawn', cancel);
-    return () => window.removeEventListener('sharing-withdrawn', cancel);
-  },[]);
+    const cancel = () => {
+      locationConsent.current++;
+      setShareUrl("");
+      setLocating(false);
+    };
+    window.addEventListener("sharing-withdrawn", cancel);
+    return () => { locationConsent.current++; window.removeEventListener("sharing-withdrawn", cancel); };
+  }, []);
   const [data, setData] = useState<Data | null>(null),
     [loading, setLoading] = useState(true),
     [busy, setBusy] = useState(false),
+    [locating, setLocating] = useState(false),
     [error, setError] = useState(""),
     [notice, setNotice] = useState(""),
     [shareUrl, setShareUrl] = useState("");
-  const load = useCallback(async () => {
-    setLoading(true);
+  const load = useCallback(async (showLoading = true) => {
+    if (showLoading) setLoading(true);
     setError("");
     try {
       setData(await api<Data>("/journeys/current"));
@@ -881,7 +881,7 @@ export function JourneyDashboard() {
         setData(null);
       else setError(e instanceof Error ? e.message : "Could not load Journey");
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
   }, []);
   useEffect(() => {
@@ -892,9 +892,11 @@ export function JourneyDashboard() {
     setError("");
     setNotice("");
     try {
-      const result = await work() as { status?: string; queued?: number } | undefined;
-      setNotice(alertStatusMessage(result,success));
-      await load();
+      const result = (await work()) as
+        | { status?: string; queued?: number; expiresAt?: string }
+        | undefined;
+      setNotice(alertStatusMessage(result, success) + (result?.expiresAt ? ` Expires ${formatSharingTime(result.expiresAt)}.` : ""));
+      await load(false);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Action failed");
     } finally {
@@ -917,22 +919,30 @@ export function JourneyDashboard() {
         : "Check-in saved.",
     );
   }
-  function shareLocation(audience: "TRUSTED_CONTACT" | "CIRCLE") {
-    if (!navigator.geolocation) { setError("Location access is unavailable in this browser."); return; }
+  function shareLocation(audience: LocationAudience, durationMinutes: number) {
+    if (busy || locating) return;
+    if (!navigator.geolocation) {
+      setError("Location access is unavailable in this browser.");
+      return;
+    }
     const who =
       audience === "CIRCLE" ? "your Travel Circle" : "your trusted contacts";
     if (
       !window.confirm(
         "Share your current location with " +
           who +
-          " for a limited time? It will expire automatically.",
+          ` for ${durationMinutes} minute${durationMinutes === 1 ? "" : "s"}? This captures one position and expires automatically.`,
       )
     )
       return;
     const consent = ++locationConsent.current;
+    setLocating(true);
+    setError("");
+    setNotice("");
     navigator.geolocation.getCurrentPosition(
       ({ coords }) => {
         if (consent !== locationConsent.current) return;
+        setLocating(false);
         void act(
           () =>
             api("/journeys/current/emergency/location", {
@@ -942,12 +952,17 @@ export function JourneyDashboard() {
                 longitude: coords.longitude,
                 audience,
                 consent: true,
+                durationMinutes,
               }),
             }),
-          "Temporary location shared until expiry or withdrawal.",
+          "Temporary location shared. Renew to update your position or extend visibility.",
         );
       },
-      (e) => setError(e.message),
+      (e) => {
+        if (consent !== locationConsent.current) return;
+        setLocating(false);
+        setError(e.code === 1 ? "Location permission was denied. Allow location access in your browser and try again." : "Could not get your current location. Check device location and try again.");
+      },
       { enableHighAccuracy: true, timeout: 15000 },
     );
   }
@@ -955,7 +970,7 @@ export function JourneyDashboard() {
     if (
       !data ||
       !window.confirm(
-        "Complete this Journey? Active check-in controls will close.",
+        "Complete this Journey? Active check-in controls will close. Revoke your Journey links and withdraw temporary locations using Your sharing controls afterwards. Stop any Google Maps sharing in Google Maps too.",
       )
     )
       return;
@@ -995,7 +1010,8 @@ export function JourneyDashboard() {
                 travel.
               </p>
             </header>
-            <SharingControls />
+            <SharingControls journeyStatus={data?.journey.status} onWithdraw={() => load(false)} />
+            <JourneyLocationGuide />
             {!data ? (
               <Prepare
                 busy={busy}
@@ -1036,7 +1052,7 @@ export function JourneyDashboard() {
                   <section className="rounded-xl border border-primary/20 bg-primary-light/40 p-4">
                     <h2 className="font-bold">Your new private share link</h2>
                     <p className="mt-1 text-xs text-muted">
-                      Copy it now. It is shown only once.
+                      Copy it now and send it privately to your contact. It is shown only once. Revoke it after your journey; anyone with the link can access the shared information until it expires or is revoked.
                     </p>
                     <div className="mt-3 flex gap-2">
                       <input
@@ -1147,7 +1163,9 @@ export function JourneyDashboard() {
                       </Card>
                     ) : null}
                     {active ? <StatusCard data={data} /> : null}
-                    {active && data.journey.journeyMode === "CIRCLE" ? <CircleLocations /> : null}
+                    {active && data.journey.journeyMode === "CIRCLE" ? (
+                      <CircleLocations />
+                    ) : null}
                     <Contacts
                       data={data}
                       busy={busy}
@@ -1158,7 +1176,7 @@ export function JourneyDashboard() {
                       <div id="emergency">
                         <Emergency
                           data={data}
-                          busy={busy}
+                          busy={busy || locating}
                           act={act}
                           checkIn={checkIn}
                           shareLocation={shareLocation}
@@ -1186,51 +1204,151 @@ export function JourneyDashboard() {
   );
 }
 
-function SharingControls() {
-  const [notice, setNotice] = useState('');
+function SharingControls({ journeyStatus, onWithdraw }: { journeyStatus?: string; onWithdraw: () => Promise<void> }) {
+  const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
   async function withdraw(path: string) {
     setBusy(true);
-    window.dispatchEvent(new Event('sharing-withdrawn'));
-    try { await api(path,{method:'POST'}); setNotice('Sharing withdrawn. Previously viewed information cannot be recalled.'); }
-    catch { setNotice('Could not withdraw sharing. Please retry.'); }
-    finally { setBusy(false); }
+    window.dispatchEvent(new Event("sharing-withdrawn"));
+    try {
+      await api(path, { method: "POST" });
+      setNotice(
+        "Sharing withdrawn. Previously viewed information cannot be recalled.",
+      );
+      await onWithdraw();
+    } catch {
+      setNotice("Could not withdraw sharing. Please retry.");
+    } finally {
+      setBusy(false);
+    }
   }
   async function status() {
-    try { const r = await api<{notifications:{providerAccepted:number;queued:number;awaitingRetry:number;failedOrCancelled:number}}>('/journeys/sharing');
-      setNotice(`Email requests: ${r.notifications.queued} queued; ${r.notifications.providerAccepted} accepted by provider (receipt not confirmed); ${r.notifications.awaitingRetry} awaiting retry; ${r.notifications.failedOrCancelled} failed or cancelled. Phone-only contacts receive no email.`);
-    } catch { setNotice('Notification status unavailable.'); }
+    try {
+      const r = await api<{
+        notifications: {
+          providerAccepted: number;
+          queued: number;
+          awaitingRetry: number;
+          failedOrCancelled: number;
+        };
+      }>("/journeys/sharing");
+      setNotice(
+        `Email requests: ${r.notifications.queued} queued; ${r.notifications.providerAccepted} accepted by provider (receipt not confirmed); ${r.notifications.awaitingRetry} awaiting retry; ${r.notifications.failedOrCancelled} failed or cancelled. Phone-only contacts receive no email.`,
+      );
+    } catch {
+      setNotice("Notification status unavailable.");
+    }
   }
-  return <section className="rounded-xl border bg-white p-4" aria-label="Sharing privacy controls">
-    <h2 className="font-bold">Your sharing controls</h2><button disabled={busy} onClick={() => void status()} className="rounded-xl border p-3">Check email request status</button>
-    <p className="text-sm">Available after completion and during account restrictions.</p>
-    <div className="mt-3 flex flex-wrap gap-3">
-      <button disabled={busy} className="btn-primary" onClick={() => void withdraw('/journeys/sharing/revoke')}>Revoke all Journey links</button>
-      <button disabled={busy} className="rounded-xl border p-3" onClick={() => void withdraw('/journeys/sharing/location/revoke')}>Withdraw all temporary locations</button>
-    </div><p role="status">{notice}</p>
-  </section>;
+  return (
+    <section
+      className="rounded-xl border bg-white p-4"
+      aria-label="Sharing privacy controls"
+    >
+      <h2 className="font-bold">Your sharing controls</h2>
+      <div className="my-3 rounded-xl border border-primary/20 bg-primary-light/30 p-3 text-sm leading-6">
+        <h3 className="font-bold">{journeyStatus === "ARRIVED" || journeyStatus === "COMPLETED" ? "Journey finished: revoke your links now" : "After your journey, revoke your links"}</h3>
+        <p>Withdraw your temporary locations and revoke all Journey links when you arrive. A forwarded link can expose your journey details and any location still being shared. Location expiry does not revoke the Journey link, and completing a journey does not revoke it automatically.</p>
+        <p className="mt-2">Revoking stops future access through the link; it cannot erase information someone already viewed or saved. If you also shared through Google Maps, open Google Maps → Location sharing and stop each share there.</p>
+      </div>
+      <button
+        disabled={busy}
+        onClick={() => void status()}
+        className="rounded-xl border p-3"
+      >
+        Check email request status
+      </button>
+      <p className="text-sm">
+        Available after completion and during account restrictions.
+      </p>
+      <div className="mt-3 flex flex-wrap gap-3">
+        <button
+          disabled={busy}
+          className="btn-primary"
+          onClick={() => void withdraw("/journeys/sharing/revoke")}
+        >
+          Revoke all Journey links
+        </button>
+        <button
+          disabled={busy}
+          className="rounded-xl border p-3"
+          onClick={() => void withdraw("/journeys/sharing/location/revoke")}
+        >
+          Withdraw all temporary locations
+        </button>
+      </div>
+      <p role="status">{notice}</p>
+    </section>
+  );
 }
 
 function CircleLocations() {
-  const [rows, setRows] = useState<Array<{id:string;latitude:string;longitude:string;expiresAt:string}>>([]);
-  const [status,setStatus] = useState('');
-  const generation=useRef(0);
+  const [rows, setRows] = useState<
+    Array<{
+      id: string;
+      latitude: string;
+      longitude: string;
+      expiresAt: string;
+    }>
+  >([]);
+  const [status, setStatus] = useState("");
+  const generation = useRef(0);
   const refresh = useCallback(async () => {
-    const request=++generation.current;
+    const request = ++generation.current;
     setRows([]);
-    try { const next=await api<Array<{id:string;latitude:string;longitude:string;expiresAt:string}>>('/journeys/current/circle-locations',{cache:'no-store'}); if(request!==generation.current||document.hidden)return;setRows(next); setStatus('Only current Circle-audience locations are shown.'); }
-    catch { setStatus('Locations unavailable.'); }
-  },[]);
+    try {
+      const next = await api<
+        Array<{
+          id: string;
+          latitude: string;
+          longitude: string;
+          expiresAt: string;
+        }>
+      >("/journeys/current/circle-locations", { cache: "no-store" });
+      if (request !== generation.current || document.hidden) return;
+      setRows(next);
+      setStatus("Only current Circle-audience locations are shown.");
+    } catch {
+      setStatus("Locations unavailable.");
+    }
+  }, []);
   useEffect(() => {
     void refresh();
-    const timer=setInterval(() => void refresh(),15000);
-    const hide=()=>{generation.current++;setRows([]);if(!document.hidden)void refresh();};
-    document.addEventListener('visibilitychange',hide);
-    return ()=>{generation.current++;clearInterval(timer);document.removeEventListener('visibilitychange',hide);};
-  },[refresh]);
-  useEffect(() => { const timer=setInterval(() => setRows(r => r.filter(x => new Date(x.expiresAt).getTime()>Date.now())),1000); return () => clearInterval(timer); },[]);
-  return <section className="rounded-xl border bg-white p-4"><h2 className="font-bold">Temporary Circle locations</h2>
-    <button onClick={() => void refresh()} className="rounded-xl border p-3">Load current shared locations</button>
-    <p role="status">{status}</p>{rows.map(row => <p key={row.id}>{row.latitude}, {row.longitude} (expires {new Date(row.expiresAt).toLocaleTimeString()})</p>)}
-  </section>;
+    const timer = setInterval(() => void refresh(), 15000);
+    const hide = () => {
+      generation.current++;
+      setRows([]);
+      if (!document.hidden) void refresh();
+    };
+    document.addEventListener("visibilitychange", hide);
+    return () => {
+      generation.current++;
+      clearInterval(timer);
+      document.removeEventListener("visibilitychange", hide);
+    };
+  }, [refresh]);
+  useEffect(() => {
+    const timer = setInterval(
+      () =>
+        setRows((r) =>
+          r.filter((x) => new Date(x.expiresAt).getTime() > Date.now()),
+        ),
+      1000,
+    );
+    return () => clearInterval(timer);
+  }, []);
+  return (
+    <section className="rounded-xl border bg-white p-4">
+      <h2 className="font-bold">Temporary Circle locations</h2>
+      <button onClick={() => void refresh()} className="rounded-xl border p-3">
+        Load current shared locations
+      </button>
+      <p role="status">{status}</p>
+      {rows.map((row) => (
+        <p key={row.id}>
+          {row.latitude}, {row.longitude} (expires{" "}
+          {new Date(row.expiresAt).toLocaleTimeString()})
+        </p>
+      ))}
+    </section>
+  );
 }
