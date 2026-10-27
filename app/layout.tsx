@@ -1,7 +1,8 @@
-import { BugReportWidget } from "@/components/bug-report-widget";
-import "./globals.css";
-import { Toaster } from "@/components/ui/sonner";
 import { AuthGuard } from "@/components/auth-guard";
+import { BugReportWidget } from "@/components/bug-report-widget";
+import { Toaster } from "@/components/ui/sonner";
+import Script from "next/script";
+import "./globals.css";
 export const metadata = {
   icons: {
     icon: [
@@ -22,6 +23,16 @@ export default function Layout({
   return (
     <html suppressHydrationWarning lang="en" data-scroll-behavior="smooth">
       <body>
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-BCH296S09H"
+          strategy="afterInteractive"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`window.dataLayer = window.dataLayer || [];
+function gtag(){window.dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-BCH296S09H');`}
+        </Script>
         <AuthGuard>{children}</AuthGuard>
         <BugReportWidget />
         <Toaster richColors position="top-right" />
