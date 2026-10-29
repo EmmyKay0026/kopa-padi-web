@@ -1,9 +1,14 @@
 import type { NextConfig } from "next";
+import { ADMIN_ROBOTS_HEADER } from "./lib/admin-indexing";
 
 const config: NextConfig = {
   async headers() {
     const api = new URL(process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000').origin;
     const csp = `default-src 'self'; script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === 'development' ? " 'unsafe-eval'" : ''}; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://images.unsplash.com; font-src 'self' data:; connect-src 'self' ${api}; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'`;
+    const adminHeaders = [
+      {key:'Cache-Control',value:'private, no-store, max-age=0, must-revalidate'},
+      {key:'X-Robots-Tag',value:ADMIN_ROBOTS_HEADER},
+    ];
     return [
       {source:'/:path*',headers:[
         {key:'Referrer-Policy',value:'no-referrer'},
@@ -13,6 +18,8 @@ const config: NextConfig = {
         {key:'Strict-Transport-Security',value:'max-age=31536000'},
       ]},
       {source:'/journey-share/:path*',headers:[{key:'Cache-Control',value:'private, no-store, max-age=0'},{key:'X-Robots-Tag',value:'noindex, nofollow'}]},
+      {source:'/admin',headers:adminHeaders},
+      {source:'/admin/:path*',headers:adminHeaders},
     ];
   },
   images: {
